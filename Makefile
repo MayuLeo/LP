@@ -1,5 +1,5 @@
 PROG := tl
-SRCS := token-list.c scan.c
+SRCS := token-list.c scan.c id-list.c
 OBJS := $(SRCS:%.c=%.o)
 DEPS := $(SRCS:%.c=%.d)
 

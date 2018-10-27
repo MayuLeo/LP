@@ -73,6 +73,8 @@ int main(int nc, char *np[])
     if(numtoken[i] >= 1)
       printf("%s   ::::  %d\n",tokenstr[i],numtoken[i]);
   }
+  print_idtab();
+  release_idtab();
   return 0;
 }
 

@@ -1,7 +1,9 @@
 #include "token-list.h"
 FILE *fp;
 char cbuf;
-int linenum ;
+int linenum;
+int num_attr;
+char string_attr[MAXSTRSIZE];
 int init_scan(char *filename)
 {
   fp = fopen(filename,"r");
@@ -13,6 +15,7 @@ int init_scan(char *filename)
   }
   cbuf = fgetc(fp);
   linenum = 0;
+  init_idtab();
   return 0;
 }
 int scan(void){
@@ -70,6 +73,36 @@ int scan(void){
         memset(string_attr, 0, sizeof(string_attr));
         snprintf(string_attr,MAXSTRSIZE,"%s",token);
 
+        if(strcmp(string_attr,"program")==0)  return TPROGRAM;
+        else if(strcmp(string_attr,"var")==0)  return TVAR;
+        else if(strcmp(string_attr,"array")==0) return TARRAY;
+        else if(strcmp(string_attr,"of")==0) return TOF;
+        else if(strcmp(string_attr,"begin")==0) return TBEGIN;
+        else if(strcmp(string_attr,"end")==0) return TEND;
+        else if(strcmp(string_attr,"if")==0) return TIF;
+        else if(strcmp(string_attr,"then")==0) return TTHEN;
+        else if(strcmp(string_attr,"else")==0) return TELSE;
+        else if(strcmp(string_attr,"procedure")==0) return TPROCEDURE;
+        else if(strcmp(string_attr,"return")==0) return TRETURN;
+        else if(strcmp(string_attr,"call")==0) return TCALL;
+        else if(strcmp(string_attr,"while")==0) return TWHILE;
+        else if(strcmp(string_attr,"do")==0) return TDO;
+        else if(strcmp(string_attr,"not")==0) return TNOT;
+        else if(strcmp(string_attr,"or")==0) return TOR;
+        else if(strcmp(string_attr,"div")==0) return TDIV;
+        else if(strcmp(string_attr,"and")==0) return TAND;
+        else if(strcmp(string_attr,"char")==0) return TCHAR;
+        else if(strcmp(string_attr,"integer")==0) return TINTEGER;
+        else if(strcmp(string_attr,"boolean")==0) return TBOOLEAN;
+        else if(strcmp(string_attr,"readln")==0) return TREADLN;
+        else if(strcmp(string_attr,"writeln")==0) return TWRITELN;
+        else if(strcmp(string_attr,"true")==0) return TTRUE;
+        else if(strcmp(string_attr,"false")==0) return TFALSE;
+        else 
+        {
+          id_countup(string_attr);
+          return TNAME;
+        }
 
         break;
       }
@@ -168,8 +201,7 @@ int scan(void){
     i = 1;
   return i;
 }
-int num_attr;
-char string_attr[MAXSTRSIZE];
+
 int get_linenum(void){
   printf("%d\n",num_attr);
   return linenum;

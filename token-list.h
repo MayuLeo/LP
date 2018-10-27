@@ -77,3 +77,10 @@ extern int num_attr;
 extern char string_attr[MAXSTRSIZE];
 extern int get_linenum(void);
 extern void end_scan(void);
+
+// id-list.c
+extern void init_idtab(void);
+extern struct ID *search_idtab(char *np);
+extern void id_countup(char *np);
+extern void print_idtab(void);
+extern void release_idtab(void);
