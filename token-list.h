@@ -61,12 +61,15 @@
 /* token-list.c */
 
 #define KEYWORDSIZE 28
+#define SYMBOLSIZE 18
 
-extern struct KEY
+typedef struct KEY
 {
   char *keyword;
   int keytoken;
-} key[KEYWORDSIZE];
+}key;
+extern key key_keyword[KEYWORDSIZE];
+//extern key key_symbol[KEYWORDSIZE];
 
 extern void error(char *mes);
 

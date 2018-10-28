@@ -1,7 +1,7 @@
 #include "token-list.h"
 
 /* keyword list */
-struct KEY key[KEYWORDSIZE] = {
+key key_keyword[KEYWORDSIZE] = {
     {"and", TAND},
     {"array", TARRAY},
     {"begin", TBEGIN},
@@ -30,7 +30,26 @@ struct KEY key[KEYWORDSIZE] = {
     {"while", TWHILE},
     {"write", TWRITE},
     {"writeln", TWRITELN}};
-
+/* symbol list*/
+key key_symbol[SYMBOLSIZE] = {
+    {"+",TPLUS},
+    {"-",TMINUS},
+    {"*",TSTAR},
+    {"=",TEQUAL},
+    {"<>",TNOTEQ},
+    {"<",TLE},
+    {"<=",TLEEQ},
+    {">",TGR},
+    {">=",TGREQ},
+    {"(",TLPAREN},
+    {")",TRPAREN},
+    {"[",TLSQPAREN},
+    {"]",TRSQPAREN},
+    {":=",TASSIGN},
+    {".",TDOT},
+    {",",TCOMMA},
+    {":",TCOLON},
+    {";",TSEMI}};
 /* Token counter */
 int numtoken[NUMOFTOKEN + 1];
 

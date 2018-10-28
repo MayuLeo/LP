@@ -5,7 +5,9 @@ int linenum;
 int num_attr;
 char string_attr[MAXSTRSIZE];
 extern char *tokenstr[NUMOFTOKEN + 1];
-extern struct KEY key[KEYWORDSIZE];
+//extern struct KEY key[KEYWORDSIZE];
+extern key key_keyword[KEYWORDSIZE];
+extern key key_symbol[KEYWORDSIZE];
 int init_scan(char *filename)
 {
   fp = fopen(filename,"r");
@@ -26,6 +28,8 @@ int scan(void){
   //cbuf = fgetc(fp);
   int i = 0;
   printf("####################scan関数\n");
+  printf("cbuf : %c\n", cbuf);
+  printf("cbuf : %d\n", cbuf);
   char token[MAXSTRSIZE];
 
   memset(token, 0, sizeof(token));
@@ -48,12 +52,16 @@ int scan(void){
       if ((cbuf == 13) || (cbuf == 10))
       {
         cbuf = fgetc(fp);
+        printf("cbuf : %c\n", cbuf);
+        printf("cbuf : %d\n", cbuf);
         if ((cbuf == 13) || (cbuf == 10))
         {
           cbuf = fgetc(fp);//CRLF
         }
         linenum++;
       }
+      else if(cbuf < 0)
+        return -1;
       else
         cbuf = fgetc(fp);
       if (cbuf >= 39)
@@ -77,44 +85,11 @@ int scan(void){
 
         for(i = 0;i < KEYWORDSIZE;i++)
         {
-          if(strcmp(string_attr,key[i].keyword) == 0)
-            return key[i].keytoken;
+          if (strcmp(string_attr, key_keyword[i].keyword) == 0)
+            return key_keyword[i].keytoken;
         }
         id_countup(string_attr);
         return TNAME;
-        /*
-        if(strcmp(string_attr,"program")==0)  return TPROGRAM;
-        else if(strcmp(string_attr,"var")==0)  return TVAR;
-        else if(strcmp(string_attr,"array")==0) return TARRAY;
-        else if(strcmp(string_attr,"of")==0) return TOF;
-        else if(strcmp(string_attr,"begin")==0) return TBEGIN;
-        else if(strcmp(string_attr,"end")==0) return TEND;
-        else if(strcmp(string_attr,"if")==0) return TIF;
-        else if(strcmp(string_attr,"then")==0) return TTHEN;
-        else if(strcmp(string_attr,"else")==0) return TELSE;
-        else if(strcmp(string_attr,"procedure")==0) return TPROCEDURE;
-        else if(strcmp(string_attr,"return")==0) return TRETURN;
-        else if(strcmp(string_attr,"call")==0) return TCALL;
-        else if(strcmp(string_attr,"while")==0) return TWHILE;
-        else if(strcmp(string_attr,"do")==0) return TDO;
-        else if(strcmp(string_attr,"not")==0) return TNOT;
-        else if(strcmp(string_attr,"or")==0) return TOR;
-        else if(strcmp(string_attr,"div")==0) return TDIV;
-        else if(strcmp(string_attr,"and")==0) return TAND;
-        else if(strcmp(string_attr,"char")==0) return TCHAR;
-        else if(strcmp(string_attr,"integer")==0) return TINTEGER;
-        else if(strcmp(string_attr,"boolean")==0) return TBOOLEAN;
-        else if(strcmp(string_attr,"readln")==0) return TREADLN;
-        else if(strcmp(string_attr,"writeln")==0) return TWRITELN;
-        else if(strcmp(string_attr,"true")==0) return TTRUE;
-        else if(strcmp(string_attr,"false")==0) return TFALSE;
-        else 
-        {
-          id_countup(string_attr);
-          return TNAME;
-        }
-        */
-
         break;
       }
     }
@@ -143,11 +118,27 @@ int scan(void){
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
       cbuf = fgetc(fp);
       printf("2記号 token = %s\n", token);
+      for(i = 0;i < SYMBOLSIZE;i++)
+      {
+        if(strcmp(token,key_symbol[i].keyword) == 0)
+        {
+          return key_symbol[i].keytoken;
+        }
+      }
     }
     else
+    {
       printf("1記号 token = %s\n", token);
+      for (i = 0; i < SYMBOLSIZE; i++)
+      {
+        if (strcmp(token, key_symbol[i].keyword) == 0)
+        {
+          return key_symbol[i].keytoken;
+        }
+      }
+    }
   }
-  else if(cbuf == 39)
+  else if(cbuf == 39)//string 改行が来るまで読み込んだ方がいいかも
   {
     while(1)
     {
