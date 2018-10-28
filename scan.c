@@ -4,6 +4,8 @@ char cbuf;
 int linenum;
 int num_attr;
 char string_attr[MAXSTRSIZE];
+extern char *tokenstr[NUMOFTOKEN + 1];
+extern struct KEY key[KEYWORDSIZE];
 int init_scan(char *filename)
 {
   fp = fopen(filename,"r");
@@ -29,13 +31,13 @@ int scan(void){
   memset(token, 0, sizeof(token));
 
 
-  char *tokenstr[NUMOFTOKEN + 1] = {
+  /*char *tokenstr[NUMOFTOKEN + 1] = {
       "",
       "NAME", "program", "var", "array", "of", "begin", "end", "if", "then",
       "else", "procedure", "return", "call", "while", "do", "not", "or",
       "div", "and", "char", "integer", "boolean", "readln", "writeln", "true",
       "false", "NUMBER", "STRING", "+", "-", "*", "=", "<>", "<", "<=", ">",
-      ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"};
+      ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"};*/
 
   if(cbuf < 0)
     return -1;
@@ -73,6 +75,14 @@ int scan(void){
         memset(string_attr, 0, sizeof(string_attr));
         snprintf(string_attr,MAXSTRSIZE,"%s",token);
 
+        for(i = 0;i < KEYWORDSIZE;i++)
+        {
+          if(strcmp(string_attr,key[i].keyword) == 0)
+            return key[i].keytoken;
+        }
+        id_countup(string_attr);
+        return TNAME;
+        /*
         if(strcmp(string_attr,"program")==0)  return TPROGRAM;
         else if(strcmp(string_attr,"var")==0)  return TVAR;
         else if(strcmp(string_attr,"array")==0) return TARRAY;
@@ -103,6 +113,7 @@ int scan(void){
           id_countup(string_attr);
           return TNAME;
         }
+        */
 
         break;
       }

@@ -48,6 +48,7 @@ int main(int nc, char *np[])
   //ToDo num_attrとstring_attrの実装，行番号の取得
   int token, i;
   char *ptr;
+
   if (nc < 2)
   {
     printf("File name id not given.\n");
