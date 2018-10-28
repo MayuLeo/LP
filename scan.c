@@ -5,7 +5,6 @@ int linenum;
 int num_attr;
 char string_attr[MAXSTRSIZE];
 extern char *tokenstr[NUMOFTOKEN + 1];
-//extern struct KEY key[KEYWORDSIZE];
 extern key key_keyword[KEYWORDSIZE];
 extern key key_symbol[KEYWORDSIZE];
 int init_scan(char *filename)
@@ -23,25 +22,10 @@ int init_scan(char *filename)
   return 0;
 }
 int scan(void){
-  //printf("cbuf : %c\n", cbuf);
-  //printf("cbuf : %d\n", cbuf);
-  //cbuf = fgetc(fp);
   int i = 0;
-  printf("####################scan関数\n");
-  printf("cbuf : %c\n", cbuf);
-  printf("cbuf : %d\n", cbuf);
   char token[MAXSTRSIZE];
 
   memset(token, 0, sizeof(token));
-
-
-  /*char *tokenstr[NUMOFTOKEN + 1] = {
-      "",
-      "NAME", "program", "var", "array", "of", "begin", "end", "if", "then",
-      "else", "procedure", "return", "call", "while", "do", "not", "or",
-      "div", "and", "char", "integer", "boolean", "readln", "writeln", "true",
-      "false", "NUMBER", "STRING", "+", "-", "*", "=", "<>", "<", "<=", ">",
-      ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"};*/
 
   if(cbuf < 0)
     return -1;
@@ -52,8 +36,6 @@ int scan(void){
       if ((cbuf == 13) || (cbuf == 10))
       {
         cbuf = fgetc(fp);
-        printf("cbuf : %c\n", cbuf);
-        printf("cbuf : %d\n", cbuf);
         if ((cbuf == 13) || (cbuf == 10))
         {
           cbuf = fgetc(fp);//CRLF
@@ -80,14 +62,16 @@ int scan(void){
 
       if (!((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122) || (cbuf >= 48 && cbuf <= 57)))
       {//文字でも数字でもなければ
-        memset(string_attr, 0, sizeof(string_attr));
-        snprintf(string_attr,MAXSTRSIZE,"%s",token);
+        
+        //snprintf(string_attr,MAXSTRSIZE,"%s",token);
 
         for(i = 0;i < KEYWORDSIZE;i++)
         {
-          if (strcmp(string_attr, key_keyword[i].keyword) == 0)
+          if (strcmp(token, key_keyword[i].keyword) == 0)
             return key_keyword[i].keytoken;
         }
+        memset(string_attr, 0, sizeof(string_attr));
+        snprintf(string_attr, MAXSTRSIZE, "%s", token);
         id_countup(string_attr);
         return TNAME;
         break;
@@ -101,9 +85,9 @@ int scan(void){
       cbuf = fgetc(fp);
       if (!(cbuf >= 48 && cbuf <= 57))//数字でなくなったら
       {
-        //memset(num_attr, 0, sizeof(num_attr));
         num_attr = atoi(token);
-        //snprintf(num_attr, MAXSTRSIZE, "%s", token);
+        memset(string_attr, 0, sizeof(string_attr));
+        snprintf(string_attr, MAXSTRSIZE, "%s", token);
         return TNUMBER;
         break;
       }
@@ -117,7 +101,6 @@ int scan(void){
     {
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
       cbuf = fgetc(fp);
-      printf("2記号 token = %s\n", token);
       for(i = 0;i < SYMBOLSIZE;i++)
       {
         if(strcmp(token,key_symbol[i].keyword) == 0)
@@ -128,7 +111,6 @@ int scan(void){
     }
     else
     {
-      printf("1記号 token = %s\n", token);
       for (i = 0; i < SYMBOLSIZE; i++)
       {
         if (strcmp(token, key_symbol[i].keyword) == 0)
@@ -142,13 +124,10 @@ int scan(void){
   {
     while(1)
     {
-      printf("cbuf : %c\n", cbuf);
-      printf("cbuf : %d\n", cbuf);
       cbuf = fgetc(fp);
 
       if (cbuf == 39){
         cbuf = fgetc(fp);
-        printf("string飛ばし読み\n");
         memset(string_attr, 0, sizeof(string_attr));
         snprintf(string_attr, MAXSTRSIZE, "%s", token);
         return TSTRING;
@@ -164,7 +143,6 @@ int scan(void){
       if (cbuf == 125)
       {
         cbuf = fgetc(fp);
-        printf("コメント読み込み\n");
         return 0;
       }
     }
@@ -188,25 +166,12 @@ int scan(void){
       }
     }
   }
-
-  printf("%lu\n", strlen(token));
-  printf("token : %s\n", token);
-
-  for(i = 0;i < NUMOFTOKEN + 1;i++)//トークン番号を返す．
-  {
-    if(strcmp(tokenstr[i],token) == 0)
-    {
-      break;
-    }
-  }
-  if(i == 50)
-    i = 1;
-  return i;
+  return -1;
 }
 
-int get_linenum(void){
-  printf("%d\n",num_attr);
-  return linenum;
+int get_linenum()
+{
+  return num_attr;
 }
 void end_scan(void){
   fclose(fp);

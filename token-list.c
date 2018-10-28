@@ -88,6 +88,7 @@ int main(int nc, char *np[])
   end_scan();
   /* 作成する部分:カウントした結果を出力する */
   printf("LAST-LINENUM : %d\n",get_linenum());
+  printf("LAST-STRING: %s\n", string_attr);
   for(int i = 1;i < NUMOFTOKEN + 1;i++)
   {
     if(numtoken[i] >= 1)
