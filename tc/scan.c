@@ -124,21 +124,40 @@ int scan(void){
       }
     }
   }
-  else if(cbuf == 39)//string 改行が来るまで読み込んだ方がいいかも
+  else if (cbuf == 39) //string 改行が来るまで読み込んだ方がいいかも
   {
-    while(1)
+    printf("STRING START\n");
+    cbuf = fgetc(fp);
+    printf("cbuf = %c\n", cbuf);
+    while (1)
     {
-      cbuf = fgetc(fp);
-      if(cbuf < 0)return -1;
 
-      if (cbuf == 39){
+      if (cbuf < 0)
+        return -1;
+
+      if (cbuf == 39)
+      {
         cbuf = fgetc(fp);
-        if(cbuf < 0)return -1;
+        printf("cbuf = %c\n", cbuf);
+        if (cbuf < 0)
+          return -1;
+        if (cbuf == 39) //連続で文字列があったら，
+        {
+          cbuf = fgetc(fp);
+          printf("cbuf = %c\n", cbuf);
+          continue;
+        }
         memset(string_attr, 0, sizeof(string_attr));
         snprintf(string_attr, MAXSTRSIZE, "%s", token);
+        printf("string_attr : %s\n",string_attr);
+        printf("STRING END\n");
         return TSTRING;
       }
-
+      else
+      {
+        snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
+        cbuf = fgetc(fp);
+      }
     }
   }
   else if(cbuf == 123)//{}コメント文
