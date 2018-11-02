@@ -64,9 +64,8 @@ char *tokenstr[NUMOFTOKEN + 1] = {
 
 int main(int nc, char *np[])
 {
-  //ToDo num_attrとstring_attrの実装，行番号の取得
   int token, i;
-  char *ptr;
+  //char *ptr;
 
   if (nc < 2)
   {
@@ -84,13 +83,12 @@ int main(int nc, char *np[])
   {
     numtoken[token]++;
     printf("トークン結果 : %s\n",tokenstr[token]);
-    printf("＄＄＄＄＄＄＄＄＄＄＄＄＄＄行番号 : %d\n", get_linenum());
   }
   end_scan();
   /* 作成する部分:カウントした結果を出力する */
   printf("LAST-LINENUM : %d\n",get_linenum());
   printf("LAST-STRING: %s\n", string_attr);
-  for(int i = 1;i < NUMOFTOKEN + 1;i++)
+  for(i = 1;i < NUMOFTOKEN + 1;i++)
   {
     if(numtoken[i] >= 1)
       printf("%s   ::::  %d\n",tokenstr[i],numtoken[i]);

@@ -22,11 +22,15 @@ int init_scan(char *filename)
   init_idtab();
   return 0;
 }
-int scan(void){
+int scan(void)
+{
   int i = 0;
   char token[MAXSTRSIZE];
 
   memset(token, 0, sizeof(token));
+  printf("###############scan###\n");
+  printf("cbuf : %c \n",cbuf);
+  printf("cbuf : %d \n", cbuf);
 
   if(cbuf < 0)return -1;
   if(cbuf <= 32){
@@ -63,9 +67,7 @@ int scan(void){
 
       if (!((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122) || (cbuf >= 48 && cbuf <= 57)))
       {//文字でも数字でもなければ
-        
-        //snprintf(string_attr,MAXSTRSIZE,"%s",token);
-
+       
         for(i = 0;i < KEYWORDSIZE;i++)
         {
           if (strcmp(token, key_keyword[i].keyword) == 0)
@@ -98,33 +100,26 @@ int scan(void){
   else if ((cbuf >= 40 && cbuf <= 46) || (cbuf >= 58 && cbuf <= 62) || cbuf == 91 || cbuf == 93)//記号
   {
     snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
+    char before_cbuf = cbuf;
     cbuf = fgetc(fp);
     if(cbuf < 0)return -1;
-    if(cbuf == 61 || cbuf == 62)//<> or <= or >=
+    if ((before_cbuf == 60 && cbuf == 62) || (before_cbuf == 60 && cbuf == 61) || (before_cbuf == 62 && cbuf == 61)) //<> or <= or >=
     {
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
       cbuf = fgetc(fp);
       if(cbuf < 0)return -1;
-      for(i = 0;i < SYMBOLSIZE;i++)
-      {
-        if(strcmp(token,key_symbol[i].keyword) == 0)
-        {
-          return key_symbol[i].keytoken;
-        }
-      }
     }
-    else
+    
+    for (i = 0; i < SYMBOLSIZE; i++)
     {
-      for (i = 0; i < SYMBOLSIZE; i++)
+      if (strcmp(token, key_symbol[i].keyword) == 0)
       {
-        if (strcmp(token, key_symbol[i].keyword) == 0)
-        {
-          return key_symbol[i].keytoken;
-        }
+        return key_symbol[i].keytoken;
       }
     }
+    return -1;//error
   }
-  else if (cbuf == 39) //string 改行が来るまで読み込んだ方がいいかも
+  else if (cbuf == 39) //string 
   {
     printf("STRING START\n");
     cbuf = fgetc(fp);
@@ -133,14 +128,25 @@ int scan(void){
     {
 
       if (cbuf < 0)
+      {
+        error("文字列内でEOFが発生指定ます．");
         return -1;
+      }
 
       if (cbuf == 39)
       {
         cbuf = fgetc(fp);
         printf("cbuf = %c\n", cbuf);
         if (cbuf < 0)
+        {
+          error("文字列内でEOFが発生しています．");
           return -1;
+        }
+        else if ((cbuf == 13) || (cbuf == 10))
+        {
+          error("文字列内に改行が含まれています．");
+          return -1;
+        }
         if (cbuf == 39) //連続で文字列があったら，
         {
           cbuf = fgetc(fp);
@@ -165,7 +171,11 @@ int scan(void){
     while(1)
     {
       cbuf = fgetc(fp);
-      if(cbuf < 0)return -1;
+      if (cbuf < 0)
+      {
+        error("注釈内でEOFが発生しています．");
+        return -1;
+      }
       if (cbuf == 125)
       {
         cbuf = fgetc(fp);
@@ -176,20 +186,47 @@ int scan(void){
   }
   else if(cbuf == 47)// /
   {
+    printf("記号\n");
+    printf("cbuf : %c \n", cbuf);
+    printf("cbuf : %d \n", cbuf);
     cbuf = fgetc(fp);
-    if(cbuf < 0)return -1;
+    printf("記号\n");
+    printf("cbuf : %c \n", cbuf);
+    printf("cbuf : %d \n", cbuf);
+    if (cbuf < 0)
+    {
+      error("注釈の開始時にEOFが発生しています．");
+      return -1;
+    }
+
     if(cbuf == 42)// *
     {
+      printf("コメント文中身START\n");
       while (1)
       {
         cbuf = fgetc(fp);//コメント文中身
-        if(cbuf < 0)return -1;
+        printf("cbuf : %c \n", cbuf);
+        if (cbuf < 0)
+        {
+          error("注釈内でEOFが発生しています．");
+          return -1;
+        }
+
         if (cbuf == 42) // *
         {
           cbuf = fgetc(fp);
-          if(cbuf < 0)return -1;
+          printf("@@@@@@@@\n");
+          printf("cbuf : %c \n", cbuf);
+          printf("cbuf : %d \n", cbuf);
+          if (cbuf < 0)
+          {
+            error("注釈の終了時にEOFが発生しています．");
+            return -1;
+          }
           if(cbuf == 47)// /
           {
+            cbuf = fgetc(fp);
+            printf("コメント文中身END\n");
             return 0;
           }
         }
@@ -199,7 +236,7 @@ int scan(void){
   return -1;
 }
 
-int get_linenum()
+int get_linenum(void)
 {
   return linenum;
 }
