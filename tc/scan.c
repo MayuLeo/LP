@@ -29,8 +29,9 @@ int scan(void)
 
   memset(token, 0, sizeof(token));
   printf("###############scan###\n");
-  printf("cbuf : %c \n",cbuf);
+  printf("cbuf : %c \n", cbuf);
   printf("cbuf : %d \n", cbuf);
+  printf("linenum : %d\n",linenum);
 
   if(cbuf < 0)return -1;
   if(cbuf <= 32){
@@ -39,22 +40,28 @@ int scan(void)
 
       if ((cbuf == 13) || (cbuf == 10))
       {
+        printf("改行開始\n");
+        char before_cbuf = cbuf;
         cbuf = fgetc(fp);
-        if ((cbuf == 13) || (cbuf == 10))
+        if ((before_cbuf == 10 && cbuf == 13) || (before_cbuf == 13 && cbuf == 10))
         {
           cbuf = fgetc(fp);//CRLF
+          printf("ONLY-CRLF\n");
         }
         linenum++;
+        printf("改行終了 : %d\n",linenum);
       }
       else if(cbuf < 0)
         return -1;
       else
         cbuf = fgetc(fp);
+      printf("cbuf : %c \n", cbuf);
+      printf("cbuf : %d \n", cbuf);
       if (cbuf >= 39)
         break;
     }
   }
-
+  printf("解析開始\n");
   //1文字目がcbufに入ってる
   if((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122))//アルファベット
   {
@@ -171,6 +178,7 @@ int scan(void)
     while(1)
     {
       cbuf = fgetc(fp);
+      printf("cbuf : %c \n", cbuf);
       if (cbuf < 0)
       {
         error("注釈内でEOFが発生しています．");
@@ -186,13 +194,7 @@ int scan(void)
   }
   else if(cbuf == 47)// /
   {
-    printf("記号\n");
-    printf("cbuf : %c \n", cbuf);
-    printf("cbuf : %d \n", cbuf);
     cbuf = fgetc(fp);
-    printf("記号\n");
-    printf("cbuf : %c \n", cbuf);
-    printf("cbuf : %d \n", cbuf);
     if (cbuf < 0)
     {
       error("注釈の開始時にEOFが発生しています．");
@@ -201,7 +203,6 @@ int scan(void)
 
     if(cbuf == 42)// *
     {
-      printf("コメント文中身START\n");
       while (1)
       {
         cbuf = fgetc(fp);//コメント文中身
@@ -215,18 +216,13 @@ int scan(void)
         if (cbuf == 42) // *
         {
           cbuf = fgetc(fp);
-          printf("@@@@@@@@\n");
-          printf("cbuf : %c \n", cbuf);
-          printf("cbuf : %d \n", cbuf);
           if (cbuf < 0)
           {
-            error("注釈の終了時にEOFが発生しています．");
             return -1;
           }
           if(cbuf == 47)// /
           {
             cbuf = fgetc(fp);
-            printf("コメント文中身END\n");
             return 0;
           }
         }
