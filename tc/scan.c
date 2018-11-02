@@ -110,7 +110,7 @@ int scan(void)
     char before_cbuf = cbuf;
     cbuf = fgetc(fp);
     if(cbuf < 0)return -1;
-    if ((before_cbuf == 60 && cbuf == 62) || (before_cbuf == 60 && cbuf == 61) || (before_cbuf == 62 && cbuf == 61)) //<> or <= or >=
+    if ((before_cbuf == 60 && cbuf == 62) || (before_cbuf == 60 && cbuf == 61) || (before_cbuf == 62 && cbuf == 61) || (before_cbuf == 58 && cbuf == 61)) //<> or <= or >= or :=
     {
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
       cbuf = fgetc(fp);
