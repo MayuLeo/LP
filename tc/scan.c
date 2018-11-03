@@ -140,20 +140,12 @@ int scan(void)
         return -1;
       }
 
-      if (cbuf == 39)
+      if (cbuf == 39)//文字終了
       {
         cbuf = fgetc(fp);
         printf("cbuf = %c\n", cbuf);
-        if (cbuf < 0)
-        {
-          error("文字列内でEOFが発生しています．");
-          return -1;
-        }
-        else if ((cbuf == 13) || (cbuf == 10))
-        {
-          error("文字列内に改行が含まれています．");
-          return -1;
-        }
+        printf("cbuf = %d\n", cbuf);
+        
         if (cbuf == 39) //連続で文字列があったら，
         {
           cbuf = fgetc(fp);
@@ -170,6 +162,17 @@ int scan(void)
       {
         snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
         cbuf = fgetc(fp);
+        printf("NEXT buf : %c\n",cbuf);
+        if (cbuf < 0)
+        {
+          error("文字列内でEOFが発生しています．");
+          return -1;
+        }
+        else if ((cbuf == 13) || (cbuf == 10))
+        {
+          error("文字列内に改行が含まれています．");
+          return -1;
+        }
       }
     }
   }
