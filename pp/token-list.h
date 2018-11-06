@@ -4,6 +4,8 @@
 #include <string.h>
 
 #define MAXSTRSIZE 1024
+#define NORMAL 0
+#define ERROR 1
 
 /* Token */
 #define TNAME 1       /* Name : Alphabet { Alphabet | Digit } */
@@ -71,7 +73,7 @@ typedef struct KEY
 extern key key_keyword[KEYWORDSIZE];
 //extern key key_symbol[KEYWORDSIZE];
 
-extern void error(char *mes);
+extern int error(char *mes);
 
 /* scan.c */
 extern int init_scan(char *filename);
@@ -87,3 +89,10 @@ extern struct ID *search_idtab(char *np);
 extern void id_countup(char *np);
 extern void print_idtab(void);
 extern void release_idtab(void);
+
+//LL.c
+extern int parse_program(void);
+extern int block(void);
+extern int variable_declaration(void);
+extern int subprogram_declaration(void);
+extern int compound_statement(void);

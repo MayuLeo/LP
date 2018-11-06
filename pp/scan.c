@@ -28,10 +28,6 @@ int scan(void)
   char token[MAXSTRSIZE];
 
   memset(token, 0, sizeof(token));
-  printf("###############scan###\n");
-  printf("cbuf : %c \n", cbuf);
-  printf("cbuf : %d \n", cbuf);
-  printf("linenum : %d\n",linenum);
 
   if(cbuf < 0)return -1;
   if(cbuf <= 32){
@@ -40,28 +36,22 @@ int scan(void)
 
       if ((cbuf == 13) || (cbuf == 10))
       {
-        printf("改行開始\n");
         char before_cbuf = cbuf;
         cbuf = fgetc(fp);
         if ((before_cbuf == 10 && cbuf == 13) || (before_cbuf == 13 && cbuf == 10))
         {
           cbuf = fgetc(fp);//CRLF
-          printf("ONLY-CRLF\n");
         }
         linenum++;
-        printf("改行終了 : %d\n",linenum);
       }
       else if(cbuf < 0)
         return -1;
       else
         cbuf = fgetc(fp);
-      printf("cbuf : %c \n", cbuf);
-      printf("cbuf : %d \n", cbuf);
       if (cbuf >= 39)
         break;
     }
   }
-  printf("解析開始\n");
   //1文字目がcbufに入ってる
   if((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122))//アルファベット
   {
@@ -74,7 +64,7 @@ int scan(void)
 
       if (!((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122) || (cbuf >= 48 && cbuf <= 57)))
       {//文字でも数字でもなければ
-       
+
         for(i = 0;i < KEYWORDSIZE;i++)
         {
           if (strcmp(token, key_keyword[i].keyword) == 0)
@@ -116,7 +106,7 @@ int scan(void)
       cbuf = fgetc(fp);
       if(cbuf < 0)return -1;
     }
-    
+
     for (i = 0; i < SYMBOLSIZE; i++)
     {
       if (strcmp(token, key_symbol[i].keyword) == 0)
@@ -126,11 +116,9 @@ int scan(void)
     }
     return -1;//error
   }
-  else if (cbuf == 39) //string 
+  else if (cbuf == 39) //string
   {
-    printf("STRING START\n");
     cbuf = fgetc(fp);
-    printf("cbuf = %c\n", cbuf);
     while (1)
     {
 
@@ -143,26 +131,20 @@ int scan(void)
       if (cbuf == 39)//文字終了
       {
         cbuf = fgetc(fp);
-        printf("cbuf = %c\n", cbuf);
-        printf("cbuf = %d\n", cbuf);
-        
+
         if (cbuf == 39) //連続で文字列があったら，
         {
           cbuf = fgetc(fp);
-          printf("cbuf = %c\n", cbuf);
           continue;
         }
         memset(string_attr, 0, sizeof(string_attr));
         snprintf(string_attr, MAXSTRSIZE, "%s", token);
-        printf("string_attr : %s\n",string_attr);
-        printf("STRING END\n");
         return TSTRING;
       }
       else
       {
         snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
         cbuf = fgetc(fp);
-        printf("NEXT buf : %c\n",cbuf);
         if (cbuf < 0)
         {
           error("文字列内でEOFが発生しています．");
@@ -181,7 +163,6 @@ int scan(void)
     while(1)
     {
       cbuf = fgetc(fp);
-      printf("cbuf : %c \n", cbuf);
       if (cbuf < 0)
       {
         error("注釈内でEOFが発生しています．");
@@ -209,7 +190,6 @@ int scan(void)
       while (1)
       {
         cbuf = fgetc(fp);//コメント文中身
-        printf("cbuf : %c \n", cbuf);
         if (cbuf < 0)
         {
           error("注釈内でEOFが発生しています．");

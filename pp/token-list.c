@@ -62,9 +62,10 @@ char *tokenstr[NUMOFTOKEN + 1] = {
     "false", "NUMBER", "STRING", "+", "-", "*", "=", "<>", "<", "<=", ">",
     ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"};
 
+int token;
 int main(int nc, char *np[])
 {
-  int token, i;
+  int i;
   //char *ptr;
 
   if (nc < 2)
@@ -77,12 +78,12 @@ int main(int nc, char *np[])
     printf("File %s can not open.\n", np[1]);
     return 0;
   }
-  
+
   /* 作成する部分：トークンカウント用の配列？を初期化する */
   while ((token = scan()) >= 0)
   {
     numtoken[token]++;
-    printf("トークン結果 : %s\n",tokenstr[token]);
+    parse_program();
   }
   end_scan();
   /* 作成する部分:カウントした結果を出力する */
@@ -98,8 +99,9 @@ int main(int nc, char *np[])
   return 0;
 }
 
-void error(char *mes)
+int error(char *mes)
 {
   printf("\n ERROR: %s\n", mes);
   end_scan();
+  return(ERROR);
 }
