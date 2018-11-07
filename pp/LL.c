@@ -77,18 +77,46 @@ int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
     if(statement() == ERROR) return(ERROR);
     token = scan();
   }
-  
+
   return(NORMAL);
 }
 int formal_parameters()//仮引数部:"(" 変数名の並び ":" 型 { ";" 変数名の並び ":" 型 } ")"
 {
+  if(token != TLPAREN) return(error("( is not found"));
+  token = scan();
+  if(variable_names() == ERROR) return(ERROR);
+  token = scan();
+  if(token != TCOLON) return(error(": is not found"));
+  token = scan();
+  if(type() == ERROR) return(ERROR);
+  token = scan();
+  while (token != TRPAREN)
+  {
+    if(token != TSEMI) return(error("; is not found"));
+    token = scan();
+    if(variable_names() == ERROR) return(ERROR);
+    token = scan();
+    if(token != TCOLON) return(error(": is not found"));
+    token = scan();
+    if(type() == ERROR) return(ERROR);
+    token = scan();
+  }
 
+  return(NORMAL);
 }
 int procedure_name()//手続き名:"名前"
 {
 
 }
-int statement()//文
+int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手続き呼び出し文 | 戻り文 | 入力文 | 出力文 | 複合文 | 空文
+{
+
+}
+int variable_names()//変数名の並び
+{
+
+}
+int type()//型
 {
 
 }
