@@ -74,7 +74,7 @@ int scan(void)
 
       if (!((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122) || (cbuf >= 48 && cbuf <= 57)))
       {//文字でも数字でもなければ
-       
+
         for(i = 0;i < KEYWORDSIZE;i++)
         {
           if (strcmp(token, key_keyword[i].keyword) == 0)
@@ -106,27 +106,42 @@ int scan(void)
   }
   else if ((cbuf >= 40 && cbuf <= 46) || (cbuf >= 58 && cbuf <= 62) || cbuf == 91 || cbuf == 93)//記号
   {
+    printf("START 記号\n");
     snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
+
     char before_cbuf = cbuf;
     cbuf = fgetc(fp);
-    if(cbuf < 0)return -1;
+    if(cbuf < 0)
+    {
+      for (i = 0; i < SYMBOLSIZE; i++)
+      {
+        if (strcmp(token, key_symbol[i].keyword) == 0)
+        {
+          printf("token $$$$$$$$$$ %s\n", token);
+          return key_symbol[i].keytoken;
+        }
+      }
+      return -1;
+    }
     if ((before_cbuf == 60 && cbuf == 62) || (before_cbuf == 60 && cbuf == 61) || (before_cbuf == 62 && cbuf == 61) || (before_cbuf == 58 && cbuf == 61)) //<> or <= or >= or :=
     {
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
       cbuf = fgetc(fp);
       if(cbuf < 0)return -1;
     }
-    
+
     for (i = 0; i < SYMBOLSIZE; i++)
     {
       if (strcmp(token, key_symbol[i].keyword) == 0)
       {
+        printf("token $$$$$$$$$$ %s\n", token);
         return key_symbol[i].keytoken;
       }
     }
+    printf("END 記号\n");
     return -1;//error
   }
-  else if (cbuf == 39) //string 
+  else if (cbuf == 39) //string
   {
     printf("STRING START\n");
     cbuf = fgetc(fp);
@@ -145,7 +160,7 @@ int scan(void)
         cbuf = fgetc(fp);
         printf("cbuf = %c\n", cbuf);
         printf("cbuf = %d\n", cbuf);
-        
+
         if (cbuf == 39) //連続で文字列があったら，
         {
           cbuf = fgetc(fp);
