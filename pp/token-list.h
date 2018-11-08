@@ -83,6 +83,7 @@ extern char string_attr[MAXSTRSIZE];
 extern int get_linenum(void);
 extern void end_scan(void);
 
+extern int linenum;
 // id-list.c
 extern void init_idtab(void);
 extern struct ID *search_idtab(char *np);
@@ -94,5 +95,10 @@ extern void release_idtab(void);
 extern int parse_program(void);
 extern int block(void);
 extern int variable_declaration(void);
+extern int variable_names(void);
 extern int subprogram_declaration(void);
 extern int compound_statement(void);
+extern int formal_parameters(void);
+extern int procedure_name(void);
+extern int statement(void);
+extern int type(void);

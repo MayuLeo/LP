@@ -63,6 +63,7 @@ char *tokenstr[NUMOFTOKEN + 1] = {
     ">=", "(", ")", "[", "]", ":=", ".", ",", ":", ";", "read", "write", "break"};
 
 int token;
+int linenum;
 int main(int nc, char *np[])
 {
   int i;
@@ -101,7 +102,7 @@ int main(int nc, char *np[])
 
 int error(char *mes)
 {
-  printf("\n ERROR: %s\n", mes);
+  printf("\n ERROR: %s : linenum %d\n", mes,linenum);
   end_scan();
   return(ERROR);
 }

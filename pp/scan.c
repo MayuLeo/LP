@@ -98,8 +98,18 @@ int scan(void)
   {
     snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
     char before_cbuf = cbuf;
-    cbuf = fgetc(fp);
-    if(cbuf < 0)return -1;
+    cbuf = fgetc(fp);if(cbuf < 0)
+    {
+      for (i = 0; i < SYMBOLSIZE; i++)
+      {
+        if (strcmp(token, key_symbol[i].keyword) == 0)
+        {
+          printf("token $$$$$$$$$$ %s\n", token);
+          return key_symbol[i].keytoken;
+        }
+      }
+      return -1;
+    }if(cbuf < 0)return -1;
     if ((before_cbuf == 60 && cbuf == 62) || (before_cbuf == 60 && cbuf == 61) || (before_cbuf == 62 && cbuf == 61) || (before_cbuf == 58 && cbuf == 61)) //<> or <= or >= or :=
     {
       snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
