@@ -240,3 +240,77 @@ int iteration_statement()//繰り返し文:"while" 式 "do" 文
   if(statement() == ERROR) return(ERROR);
   return(NORMAL);
 }
+int exit_statement()//脱出文:TBREAK
+{
+  if(token != TBREAK) return(error("break is not found"));
+  token = scan();
+  return(NORMAL);
+}
+int call_statement()//手続き呼び出し文:"call" 手続き名 [ "(" 式の並び ")" ]
+{
+  if(token != TCALL) return(error("call is not found"));
+  token = scan();
+  if(procedure_name() == ERROR) return(ERROR);
+  if(token == TLPAREN)
+  {
+    token = scan();
+    if(expressions() == ERROR) return(ERROR);
+    if(token != TRPAREN) return(error(") is not found"));
+    token = scan();
+  }
+  return(NORMAL);
+}
+int expressions()//式の並び:式 { "," 式 }
+{
+  if(expression() == ERROR) return(ERROR);
+  while (token == TCOMMA) {
+    if(token != TCOMMA) return(error("commma is not found"));
+    token = scan();
+    if(expression() == ERROR) return(ERROR);
+  }
+  return(NORMAL);
+}
+int return_statement()//戻り文:"return"
+{
+  if(token != TRETURN) return(error("return is not found"));
+  token = scan();
+  return(NORMAL);
+}
+int assignment_statement()//代入文:左辺部 ":=" 式
+{
+  if(left_part() == ERROR) return(ERROR);
+  if(token != TASSIGN) return(error(":= is not found"));
+  token = scan();
+  if(expression() == ERROR) return(ERROR);
+  return(NORMAL);
+}
+int left_part()//左辺部:変数
+{
+  if(variable() == ERROR) return(ERROR);
+  return(NORMAL);
+}
+int variable()//変数
+{
+  if(variable_name() == ERROR) return(ERROR);
+  return(NORMAL);
+}
+int expression()//式;単純式 { 関係演算子 単純式 }
+{
+  if(simple_expression() == ERROR) return(ERROR);
+  while (relational_operator() == NORMAL) {
+    if(simple_expression() == ERROR) return(ERROR);
+  }
+  return(NORMAL);
+}
+int simple_expression()//単純式[ "+" | "-" ] 項 { 加法演算子 項 }
+{
+  if(token == TPLUS || token == TMINUS)
+  {
+    token = scan();
+  }
+  if(term() == ERROR) return(ERROR);
+  while (additive_operator() == NORMAL) {
+    if(term() == ERROR) return(ERROR);
+  }
+  return(NORMAL);
+}
