@@ -314,3 +314,228 @@ int simple_expression()//単純式[ "+" | "-" ] 項 { 加法演算子 項 }
   }
   return(NORMAL);
 }
+int term()//項: 因子 { 乗法演算子 因子 }
+{
+  if(factor() == ERROR) return(ERROR);
+  while (multiplicative_operator() == NORMAL) {
+    if(factor() == ERROR) return(ERROR);
+  }
+  return(NORMAL);
+}
+int factor()//因子:変数 |定数 | "("式 ")" | "not"因子 |標準型 "("式 ")"
+{
+  //名前 or 数字 or "(" or "not" or "integer" | "boolean" | "char"
+  switch (token) {
+    case TNAME:
+      if(variable() == ERROR) return(ERROR);
+      break;
+    case TNUMBER:
+    case TFALSE:
+    case TTRUE:
+    case TSTRING:
+      if(constant() == ERROR) return(ERROR);
+      break;
+    case TLPAREN:
+      if(token != TLPAREN) return(error("( is not found"));
+      token = scan();
+      if(expression() == ERROR) return(ERROR);
+      if(token != TRPAREN) return(error(") is not found"));
+      token = scan();
+      break;
+    case TNOT;
+      if(token != TNOT) return(error("not is not found"));
+      token = scan();
+      if(factor() == ERROR) return(ERROR);
+      break;
+    case TINTEGER:
+    case TBOOLEAN:
+    case TCHAR:
+      if(standard_type() == ERROR) return(ERROR);
+      if(token != TLPAREN) return(error("( is not found"));
+      token = scan();
+      if(expression() == ERROR) return(ERROR);
+      if(token != TRPAREN) return(error(") is not found"));
+      token = scan();
+      break;
+    default: return(error("factor error"));break;
+  }
+  return(NORMAL);
+}
+int constant()//定数
+{
+  switch (token) {
+    case TNUMBER:
+      if(token != TNUMBER) return(error("number is not found"));
+      token = scan();
+      break;
+    case TFALSE:
+      if(token != TFALSE) return(error("false is not found"));
+      token = scan();
+      break;
+    case TTRUE;
+      if(token != TTRUE) return(error("true is not found"));
+      token = scan();
+      break;
+    case TSTRING:
+      if(token != TSTRING) return(error("string is not found"));
+      token = scan();
+      break;
+    default: return(error("constant error"));break;
+  }
+  return(NORMAL);
+}
+int multiplicative_operator()//乗法演算子
+{
+  switch (token) {
+    case TSTAR:
+    if(token != TSTAR) return(error("* is not found"));
+    token = scan();
+      break;
+    case TDIV:
+      if(token != TDIV) return(error("div is not found"));
+      token = scan();
+      break;
+    case TAND:
+      if(token != TAND) return(error("and is not found"));
+      token = scan();
+      break;
+    default: return(error("multiplicative_operator error"));break;
+  }
+  return(NORMAL);
+}
+int additive_operator()//加法演算子
+{
+  switch (token) {
+    case TPLUS:
+      if(token != TPLUS) return(error("+ is not found"));
+      token = scan();
+      break;
+    case TMINUS:
+      if(token != TMINUS) return(error("- is not found"));
+      token = scan();
+      break;
+    case TOR:
+      if(token != TOR) return(error("or is not found"));
+      token = scan();
+      break;
+    default: return(error("additive_operator error"));break;
+  }
+  return(NORMAL);
+}
+int relational_operator()//関係演算子:"=" | "<>" | "<" | "<=" | ">" | ">="
+{
+   switch (token) {
+     case TEQUAL:
+       if(token != TEQUAL) return(error("= is not found"));
+       token = scan();
+      break;
+    case TNOTEQ:
+      if(token != TNOTEQ) return(error("<> is not found"));
+      token = scan();
+      break;
+    case TLE:
+      if(token != TLE) return(error("< is not found"));
+      token = scan();
+      break;
+    case TLEEQ:
+      if(token != TLEEQ) return(error("<= is not found"));
+      token = scan();
+      break;
+    case TGR:
+      if(token != TGR) return(error("> is not found"));
+      token = scan();
+      break;
+    case TGREQ:
+      if(token != TGREQ) return(error(">= is not found"));
+      token = scan();
+      break;
+    default: return(error("relational_operator error"));break;
+   }
+}
+int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 } ")" ]
+{
+  if(token == TREAD)
+  {
+    token = scan();
+  }
+  else if(token == TREADLN)
+  {
+    token = scan();
+  }
+  else
+  {
+    return( error("read or readln is not found"));
+  }
+
+  if(token != TLPAREN)
+  {
+    token = scan();
+    if(variable() == ERROR) return(ERROR);
+
+    while (token == TCOMMA) {
+      token = scan();
+      if(variable() == ERROR) return(ERROR);
+
+    }
+    if(token != TRPAREN) return(") is not found");
+    token = scan();
+  }
+  return(NORMAL);
+}
+int output_statement()//出力文:("write" | "writeln") [ "(" 出力指定 { "," 出力指定 } ")" ]
+{
+  if(token == TWRITE)
+  {
+    token = scan();
+  }
+  else if(token == TWRITELN)
+  {
+    token = scan();
+  }
+  else
+  {
+    return( error("write or writeln is not found"));
+  }
+
+  if(token != TLPAREN)
+  {
+    token = scan();
+    if(output_formal() == ERROR)return(ERROR);
+    while (token == TCOMMA) {
+      token = scan();
+      if(output_formal() == ERROR) return(ERROR);
+    }
+    if(token != TRPAREN) return(") is not found");
+    token = scan();
+  }
+  return(NORMAL);
+}
+int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列"
+{
+  if(token == TSTRING)
+  {
+    token = scan();
+  }
+  else if(expression() == NORMAL)
+  {
+    if(token == TCOLON)
+    {
+      token = scan();
+      if(token != TNUMBER) return(error("number is not found"));
+      token = scan();
+    }
+    else
+    {
+      return(error(": is not found"));
+    }
+  }
+  else
+  {
+    return(error("output_formal error"));
+  }
+  return(NORMAL);
+}
+//int empty_statement()
+//{
+//  
+//}
