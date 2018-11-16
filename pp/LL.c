@@ -210,9 +210,40 @@ int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
 
 int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手続き呼び出し文 | 戻り文 | 入力文 | 出力文 | 複合文 | 空文
 {
-  //  switch (token) {
-  //    case /* value */:
-  //  }
+  //代入文 "名前" | 分岐文 "if" | 繰り返し文 "while" | 脱出文 "break" | 手続き呼び出し文 "call" | 戻り文 "return" | 入力文 "read" or "readln" | 出力文 "write" or "writeln" |複合文 "begin" | 空文 ""
+  switch (token) {
+    case TNAME://代入文
+      if(assignment_statement() == ERROR) return(ERROR);
+      break;
+    case TIF://分岐文
+      if(condition_statement() == ERROR) return(ERROR);
+      break;
+    case TWHILE://繰り返し文
+      if(iteration_statement() == ERROR) return(ERROR);
+      break;
+    case TBREAK://脱出文
+      if(exit_statement() == ERROR) return(ERROR);
+      break;
+    case TCALL://手続き呼出文
+      if(call_statement() == ERROR) return(ERROR);
+      break;
+    case TRETURN://戻り文
+      if(return_statement() == ERROR) return(ERROR);
+      break;
+    case TREAD:
+    case TREADLN://入力文
+      if(input_statement() == ERROR) return(ERROR);
+      break;
+    case TWRITE:
+    case TWRITELN://出力文
+      if(output_formal() == ERROR) return(ERROR);
+      break;
+    case TBEGIN://複合文
+      if(compound_statement() == ERROR) return(ERROR);
+      break;
+    //TODO case empty statement
+    default: return(error("statement error"));
+  }
   return(NORMAL);
 }
 int condition_statement()//分岐文: "if" 式 "then" 文 [ "else" 文 ]
@@ -537,5 +568,5 @@ int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列
 }
 //int empty_statement()
 //{
-//  
+//
 //}
