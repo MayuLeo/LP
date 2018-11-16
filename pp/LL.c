@@ -253,7 +253,7 @@ int condition_statement()//分岐文: "if" 式 "then" 文 [ "else" 文 ]
     if(expression() == ERROR) return(ERROR);
     if(token != TTHEN) return(error("then is not fuond"));
     token = scan();
-    if(statement() == ERROR) return(ERRPR);
+    if(statement() == ERROR) return(ERROR);
     if(token == TELSE)
     {
       token = scan();
@@ -373,7 +373,7 @@ int factor()//因子:変数 |定数 | "("式 ")" | "not"因子 |標準型 "("式
       if(token != TRPAREN) return(error(") is not found"));
       token = scan();
       break;
-    case TNOT;
+    case TNOT:
       if(token != TNOT) return(error("not is not found"));
       token = scan();
       if(factor() == ERROR) return(ERROR);
@@ -403,7 +403,7 @@ int constant()//定数
       if(token != TFALSE) return(error("false is not found"));
       token = scan();
       break;
-    case TTRUE;
+    case TTRUE:
       if(token != TTRUE) return(error("true is not found"));
       token = scan();
       break;
@@ -482,6 +482,7 @@ int relational_operator()//関係演算子:"=" | "<>" | "<" | "<=" | ">" | ">="
       break;
     default: return(error("relational_operator error"));break;
    }
+   return(NORMAL);
 }
 int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 } ")" ]
 {
@@ -508,7 +509,7 @@ int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 }
       if(variable() == ERROR) return(ERROR);
 
     }
-    if(token != TRPAREN) return(") is not found");
+    if(token != TRPAREN) return(error(") is not found"));
     token = scan();
   }
   return(NORMAL);
@@ -536,7 +537,7 @@ int output_statement()//出力文:("write" | "writeln") [ "(" 出力指定 { ","
       token = scan();
       if(output_formal() == ERROR) return(ERROR);
     }
-    if(token != TRPAREN) return(") is not found");
+    if(token != TRPAREN) return(error(") is not found"));
     token = scan();
   }
   return(NORMAL);
