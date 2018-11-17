@@ -30,28 +30,84 @@ int scan(void)
   memset(token, 0, sizeof(token));
 
   if(cbuf < 0)return -1;
-  if(cbuf <= 32){
-    while(1)
+  while(cbuf <= 32 || cbuf == 123 || cbuf == 47)
+  {
+    if ((cbuf == 13) || (cbuf == 10))
     {
-
-      if ((cbuf == 13) || (cbuf == 10))
+      char before_cbuf = cbuf;
+      cbuf = fgetc(fp);
+      if ((before_cbuf == 10 && cbuf == 13) || (before_cbuf == 13 && cbuf == 10))
       {
-        char before_cbuf = cbuf;
-        cbuf = fgetc(fp);
-        if ((before_cbuf == 10 && cbuf == 13) || (before_cbuf == 13 && cbuf == 10))
-        {
-          cbuf = fgetc(fp);//CRLF
-        }
-        linenum++;
+        cbuf = fgetc(fp);//CRLF
       }
-      else if(cbuf < 0)
-        return -1;
-      else
-        cbuf = fgetc(fp);
-      if (cbuf >= 39)
-        break;
+      linenum++;
     }
+    else if(cbuf == 123)//{}コメント文
+    {
+      while(1)
+      {
+        cbuf = fgetc(fp);
+        if (cbuf < 0)
+        {
+          error("注釈内でEOFが発生しています．");
+          return -1;
+        }
+        if (cbuf == 125)
+        {
+          cbuf = fgetc(fp);
+          if(cbuf < 0)return -1;
+          break;
+          //return 0;
+        }
+      }
+    }
+    else if(cbuf == 47)// /
+    {
+      cbuf = fgetc(fp);
+      if (cbuf < 0)
+      {
+        error("注釈の開始時にEOFが発生しています．");
+        return -1;
+      }
+
+      if(cbuf == 42)// * コメント文開始
+      {
+        while (1)
+        {
+          cbuf = fgetc(fp);//コメント文中身
+          if (cbuf < 0)
+          {
+            error("注釈内でEOFが発生しています．");
+            return -1;
+          }
+
+          if (cbuf == 42) // *
+          {
+            cbuf = fgetc(fp);
+            if (cbuf < 0)
+            {
+              return -1;
+            }
+            if(cbuf == 47)// /
+            {
+              cbuf = fgetc(fp);
+              break;
+              //return 0;
+            }
+          }
+        }
+      }
+    }
+    else if(cbuf < 0)
+        return -1;
+
+    else
+      cbuf = fgetc(fp);
+
   }
+
+
+
   //1文字目がcbufに入ってる
   if((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122))//アルファベット
   {
@@ -104,7 +160,6 @@ int scan(void)
       {
         if (strcmp(token, key_symbol[i].keyword) == 0)
         {
-          printf("token $$$$$$$$$$ %s\n", token);
           return key_symbol[i].keytoken;
         }
       }
@@ -168,60 +223,7 @@ int scan(void)
       }
     }
   }
-  else if(cbuf == 123)//{}コメント文
-  {
-    while(1)
-    {
-      cbuf = fgetc(fp);
-      if (cbuf < 0)
-      {
-        error("注釈内でEOFが発生しています．");
-        return -1;
-      }
-      if (cbuf == 125)
-      {
-        cbuf = fgetc(fp);
-        if(cbuf < 0)return -1;
-        return 0;
-      }
-    }
-  }
-  else if(cbuf == 47)// /
-  {
-    cbuf = fgetc(fp);
-    if (cbuf < 0)
-    {
-      error("注釈の開始時にEOFが発生しています．");
-      return -1;
-    }
 
-    if(cbuf == 42)// *
-    {
-      while (1)
-      {
-        cbuf = fgetc(fp);//コメント文中身
-        if (cbuf < 0)
-        {
-          error("注釈内でEOFが発生しています．");
-          return -1;
-        }
-
-        if (cbuf == 42) // *
-        {
-          cbuf = fgetc(fp);
-          if (cbuf < 0)
-          {
-            return -1;
-          }
-          if(cbuf == 47)// /
-          {
-            cbuf = fgetc(fp);
-            return 0;
-          }
-        }
-      }
-    }
-  }
   return -1;
 }
 

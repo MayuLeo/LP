@@ -7,6 +7,7 @@ int parse_program() {
   token = scan();
   if(token != TSEMI) return(error("Semicolon is not found"));
   token = scan();
+  printf("token = %d\n",token);
   if(block() == ERROR) return(ERROR);
   if(token != TDOT) return(error("Period is not found at the end of program"));
   token = scan();
@@ -15,6 +16,7 @@ int parse_program() {
 int block()//ブロック{ 変数宣言部 | 副プログラム宣言 } 複合文
 {
   printf("block\n");
+  printf("token = %d\n",token);
   while(token == TPROCEDURE || token == TVAR)
   {
     if(token == TPROCEDURE)
@@ -33,32 +35,32 @@ int block()//ブロック{ 変数宣言部 | 副プログラム宣言 } �
 }
 int variable_declaration()//変数宣言文:"var" 変数名の並び ":" 型 ";" { 変数名の並び ":" 型 ";" }
 {
-  printf("variable_declaration\n");
+  printf("start variable_declaration\n");
   if(token != TVAR) return(error("var is not found"));
   token = scan();
   if(variable_names() == ERROR) return(ERROR);
-  token = scan();
+  //token = scan();
   if(token != TCOLON) return(error(": is not found"));
   token = scan();
   if(type() == ERROR) return(ERROR);
-  token = scan();
+  //token = scan();
   if(token != TSEMI) return(error("; is not found"));
   token = scan();
 
 
 
-  while(1){
+  while(token == TNAME){
     if(variable_names() == ERROR) break;
-    token = scan();
+    //token = scan();
     if(token != TCOLON) return(error(": is not found"));
     token = scan();
     if(type() == ERROR) return(ERROR);
-    token = scan();
+    //token = scan();
     if(token != TSEMI) return(error("; is not found"));
     token = scan();
   }
 
-
+  printf("end variable_declaration\n");
   return(NORMAL);
 }
 int variable_names()//変数名の並び
@@ -115,7 +117,7 @@ int array_type()//配列型
 }
 int subprogram_declaration()//副プログラム宣言:"procedure" 手続き名 [ 仮引数部 ] ";" [ 変数宣言部 ] 複合文 ";"
 {
-  printf("subprogram_declaration\n");
+  printf("START subprogram_declaration\n");
   if (token != TPROCEDURE) return(error("procedure is not found."));
   token = scan();
   //if (token != TNAME) return(error("procedure name is keyward."));
@@ -136,7 +138,6 @@ int subprogram_declaration()//副プログラム宣言:"procedure" 手続き名 
   }
   if(compound_statement() == ERROR) return(ERROR);
 
-  //token = scan();
   if(token != TSEMI) return(error("semicolon is not found"));
   token = scan();
   /*
@@ -154,6 +155,7 @@ int subprogram_declaration()//副プログラム宣言:"procedure" 手続き名 
   if(token != TSEMI) return(error("semicolon is not found"));
   token = scan();
   */
+  printf("END subprogram_declaration\n");
   return(NORMAL);
 }
 int procedure_name()//手続き名:"名前"
@@ -164,27 +166,27 @@ int procedure_name()//手続き名:"名前"
 }
 int formal_parameters()//仮引数部:"(" 変数名の並び ":" 型 { ";" 変数名の並び ":" 型 } ")"
 {
-  printf("formal_parameters\n");
+  printf("start formal_parameters\n");
   if(token != TLPAREN) return(error("( is not found"));
   token = scan();
   if(variable_names() == ERROR) return(ERROR);
-  token = scan();
+  //token = scan();
   if(token != TCOLON) return(error(": is not found"));
   token = scan();
   if(type() == ERROR) return(ERROR);
-  token = scan();
+  //token = scan();
   while (token != TRPAREN)
   {
     if(token != TSEMI) return(error("; is not found"));
     token = scan();
     if(variable_names() == ERROR) return(ERROR);
-    token = scan();
+    //token = scan();
     if(token != TCOLON) return(error(": is not found"));
     token = scan();
     if(type() == ERROR) return(ERROR);
-    token = scan();
+    //token = scan();
   }
-
+  printf("end formal_parameters\n");
   return(NORMAL);
 }
 int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
@@ -194,14 +196,21 @@ int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
   token = scan();
   if(statement() == ERROR) return(ERROR);
   //token = scan();
-
+  /*
   while(token != TEND)
   {
     if(token != TSEMI) return(error("semicolon is not found"));
     token = scan();
     if(statement() == ERROR) return(ERROR);
-    token = scan();
+    //token = scan();
   }
+  */
+  while (token == TSEMI) {
+    token = scan();
+    if(statement() == ERROR) return(ERROR);
+  }
+  printf("@@@@@@@@@@@@\n");
+  if(token != TEND) return(error("end is not found"));
   token = scan();
   printf("END compound_statement\n");
   return(NORMAL);
@@ -213,30 +222,38 @@ int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手�
   //代入文 "名前" | 分岐文 "if" | 繰り返し文 "while" | 脱出文 "break" | 手続き呼び出し文 "call" | 戻り文 "return" | 入力文 "read" or "readln" | 出力文 "write" or "writeln" |複合文 "begin" | 空文 ""
   switch (token) {
     case TNAME://代入文
+      printf("文->代入文\n");
       if(assignment_statement() == ERROR) return(ERROR);
       break;
     case TIF://分岐文
+      printf("文->分岐文\n");
       if(condition_statement() == ERROR) return(ERROR);
       break;
     case TWHILE://繰り返し文
+      printf("文->繰り返し文\n");
       if(iteration_statement() == ERROR) return(ERROR);
       break;
     case TBREAK://脱出文
+      printf("文->脱出文\n");
       if(exit_statement() == ERROR) return(ERROR);
       break;
     case TCALL://手続き呼出文
+      printf("文->手続き呼び出し文\n");
       if(call_statement() == ERROR) return(ERROR);
       break;
     case TRETURN://戻り文
+      printf("文->戻り文\n");
       if(return_statement() == ERROR) return(ERROR);
       break;
     case TREAD:
     case TREADLN://入力文
+      printf("文->入力文\n");
       if(input_statement() == ERROR) return(ERROR);
       break;
     case TWRITE:
     case TWRITELN://出力文
-      if(output_formal() == ERROR) return(ERROR);
+      printf("文->出力文\n");
+      if(output_statement() == ERROR) return(ERROR);
       break;
     case TBEGIN://複合文
       if(compound_statement() == ERROR) return(ERROR);
@@ -263,12 +280,14 @@ int condition_statement()//分岐文: "if" 式 "then" 文 [ "else" 文 ]
 }
 int iteration_statement()//繰り返し文:"while" 式 "do" 文
 {
+  printf("start iteration_statement\n");
   if(token != TWHILE) return(error("while is not found"));
   token = scan();
   if(expression() == ERROR) return(ERROR);
   if(token != TDO) return(error("do is not found"));
   token = scan();
   if(statement() == ERROR) return(ERROR);
+  printf("end iteration_statement\n");
   return(NORMAL);
 }
 int exit_statement()//脱出文:TBREAK
@@ -279,6 +298,7 @@ int exit_statement()//脱出文:TBREAK
 }
 int call_statement()//手続き呼び出し文:"call" 手続き名 [ "(" 式の並び ")" ]
 {
+  printf("start call_statement\n");
   if(token != TCALL) return(error("call is not found"));
   token = scan();
   if(procedure_name() == ERROR) return(ERROR);
@@ -289,6 +309,7 @@ int call_statement()//手続き呼び出し文:"call" 手続き名 [ "(" 式の�
     if(token != TRPAREN) return(error(") is not found"));
     token = scan();
   }
+  printf("end call_statement\n");
   return(NORMAL);
 }
 int expressions()//式の並び:式 { "," 式 }
@@ -328,7 +349,10 @@ int variable()//変数
 int expression()//式;単純式 { 関係演算子 単純式 }
 {
   if(simple_expression() == ERROR) return(ERROR);
-  while (relational_operator() == NORMAL) {
+  //while (relational_operator() == NORMAL) {
+  while(token >= TEQUAL && token <= TGREQ)
+  {
+    token = scan();
     if(simple_expression() == ERROR) return(ERROR);
   }
   return(NORMAL);
@@ -340,7 +364,10 @@ int simple_expression()//単純式[ "+" | "-" ] 項 { 加法演算子 項 }
     token = scan();
   }
   if(term() == ERROR) return(ERROR);
-  while (additive_operator() == NORMAL) {
+  //while (additive_operator() == NORMAL) {
+  while(token == TPLUS || token == TMINUS || token == TOR)
+  {
+    token = scan();
     if(term() == ERROR) return(ERROR);
   }
   return(NORMAL);
@@ -348,7 +375,14 @@ int simple_expression()//単純式[ "+" | "-" ] 項 { 加法演算子 項 }
 int term()//項: 因子 { 乗法演算子 因子 }
 {
   if(factor() == ERROR) return(ERROR);
-  while (multiplicative_operator() == NORMAL) {
+
+  //while (multiplicative_operator() == NORMAL) {//TODO while文で関数がNORMALかどうかでやるのはよくないかも
+  printf("token = %d\n",token);
+  while (token == TSTAR || token == TDIV || token == TAND)
+  {
+    //token = scan();
+    printf("token = %d\n",token);
+    if(multiplicative_operator() == ERROR) return(ERROR);
     if(factor() == ERROR) return(ERROR);
   }
   return(NORMAL);
@@ -356,6 +390,8 @@ int term()//項: 因子 { 乗法演算子 因子 }
 int factor()//因子:変数 |定数 | "("式 ")" | "not"因子 |標準型 "("式 ")"
 {
   //名前 or 数字 or "(" or "not" or "integer" | "boolean" | "char"
+  printf("start factor\n");
+  printf("factor token = %d\n",token);
   switch (token) {
     case TNAME:
       if(variable() == ERROR) return(ERROR);
@@ -390,6 +426,7 @@ int factor()//因子:変数 |定数 | "("式 ")" | "not"因子 |標準型 "("式
       break;
     default: return(error("factor error"));break;
   }
+  printf("end factor\n");
   return(NORMAL);
 }
 int constant()//定数
@@ -417,6 +454,7 @@ int constant()//定数
 }
 int multiplicative_operator()//乗法演算子
 {
+  printf("token = %d\n",token);
   switch (token) {
     case TSTAR:
     if(token != TSTAR) return(error("* is not found"));
@@ -486,6 +524,7 @@ int relational_operator()//関係演算子:"=" | "<>" | "<" | "<=" | ">" | ">="
 }
 int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 } ")" ]
 {
+  printf("start input_statement\n");
   if(token == TREAD)
   {
     token = scan();
@@ -499,8 +538,9 @@ int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 }
     return( error("read or readln is not found"));
   }
 
-  if(token != TLPAREN)
+  if(token == TLPAREN)
   {
+
     token = scan();
     if(variable() == ERROR) return(ERROR);
 
@@ -512,10 +552,12 @@ int input_statement()//入力文:("read" | "readln") [ "(" 変数 { "," 変数 }
     if(token != TRPAREN) return(error(") is not found"));
     token = scan();
   }
+  printf("end input_statement\n");
   return(NORMAL);
 }
 int output_statement()//出力文:("write" | "writeln") [ "(" 出力指定 { "," 出力指定 } ")" ]
 {
+  printf("start output_statement\n");
   if(token == TWRITE)
   {
     token = scan();
@@ -528,11 +570,12 @@ int output_statement()//出力文:("write" | "writeln") [ "(" 出力指定 { ","
   {
     return( error("write or writeln is not found"));
   }
-
-  if(token != TLPAREN)
+  printf("writeの識別まで終わった地点\n");
+  if(token == TLPAREN)
   {
     token = scan();
     if(output_formal() == ERROR)return(ERROR);
+    printf("TSTRINGのところまで\n");
     while (token == TCOMMA) {
       token = scan();
       if(output_formal() == ERROR) return(ERROR);
@@ -540,10 +583,12 @@ int output_statement()//出力文:("write" | "writeln") [ "(" 出力指定 { ","
     if(token != TRPAREN) return(error(") is not found"));
     token = scan();
   }
+  printf("end output_statement\n");
   return(NORMAL);
 }
 int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列"
 {
+  printf("start output_formal\n");
   if(token == TSTRING)
   {
     token = scan();
@@ -556,18 +601,16 @@ int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列
       if(token != TNUMBER) return(error("number is not found"));
       token = scan();
     }
-    else
-    {
-      return(error(": is not found"));
-    }
   }
   else
   {
     return(error("output_formal error"));
   }
+  printf("end output_formal\n");
   return(NORMAL);
 }
 //int empty_statement()
 //{
-//
+//  token = scan();
+//  return(NORMAL);
 //}
