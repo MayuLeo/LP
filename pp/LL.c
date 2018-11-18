@@ -82,13 +82,27 @@ int variable_name()
 }
 int type()//型
 {
-  if(standard_type() == ERROR)
+  if(token == TINTEGER || token == TBOOLEAN || token == TCHAR)
   {
-    if(array_type() == ERROR)
-    {
-      return(error("type error!"));
-    }
+    //token = scan();
+    printf("standard_type\n");
+    if(standard_type() == ERROR) return(ERROR);
   }
+  else if(token == TARRAY)
+  {
+    //token = scan();
+    printf("array_type\n");
+    if(array_type() == ERROR) return(ERROR);
+  }
+  else
+    return(error("type error"));
+  //if(standard_type() == ERROR)
+  //{
+  //  if(array_type() == ERROR)
+  //  {
+  //    return(error("type error!"));
+  //  }
+  //}
 
   return(NORMAL);
 }
@@ -103,6 +117,7 @@ int standard_type()//標準型
 }
 int array_type()//配列型
 {
+  printf("start array_type\n");
   if(token != TARRAY) return(error("array is not found"));
   token = scan();
   if(token != TLSQPAREN) return(error("[ is not found"));
@@ -112,7 +127,9 @@ int array_type()//配列型
   if(token != TRSQPAREN) return(error("] is not found"));
   token = scan();
   if(token != TOF) return(error("of in not found"));
+  token = scan();
   if(standard_type() == ERROR) return(ERROR);
+  printf("end array_type\n");
   return(NORMAL);
 }
 int subprogram_declaration()//副プログラム宣言:"procedure" 手続き名 [ 仮引数部 ] ";" [ 変数宣言部 ] 複合文 ";"
@@ -220,6 +237,7 @@ int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
 int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手続き呼び出し文 | 戻り文 | 入力文 | 出力文 | 複合文 | 空文
 {
   //代入文 "名前" | 分岐文 "if" | 繰り返し文 "while" | 脱出文 "break" | 手続き呼び出し文 "call" | 戻り文 "return" | 入力文 "read" or "readln" | 出力文 "write" or "writeln" |複合文 "begin" | 空文 ""
+  printf("token = %d\n",token);
   switch (token) {
     case TNAME://代入文
       printf("文->代入文\n");
@@ -331,6 +349,7 @@ int return_statement()//戻り文:"return"
 int assignment_statement()//代入文:左辺部 ":=" 式
 {
   if(left_part() == ERROR) return(ERROR);
+  printf("token = %d\n",token);
   if(token != TASSIGN) return(error(":= is not found"));
   token = scan();
   if(expression() == ERROR) return(ERROR);
@@ -344,6 +363,13 @@ int left_part()//左辺部:変数
 int variable()//変数
 {
   if(variable_name() == ERROR) return(ERROR);
+  if(token == TLSQPAREN)
+  {
+    token = scan();
+    if(expression() == ERROR) return(ERROR);
+    if(token != TRSQPAREN) return(error("] is not found"));
+    token = scan();
+  }
   return(NORMAL);
 }
 int expression()//式;単純式 { 関係演算子 単純式 }

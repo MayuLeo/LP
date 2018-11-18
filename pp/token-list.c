@@ -102,7 +102,9 @@ int main(int nc, char *np[])
 
 int error(char *mes)
 {
+  printf("\x1b[31m");
   printf("\n ERROR: %s : linenum %d\n", mes,linenum);
+  printf("\x1b[32m"); 
   end_scan();
   return(ERROR);
 }
