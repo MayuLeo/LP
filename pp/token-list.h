@@ -92,6 +92,7 @@ extern void print_idtab(void);
 extern void release_idtab(void);
 
 //LL.c
+extern int next_token(void);
 extern int parse_program(void);
 extern int block(void);
 extern int variable_declaration(void);
