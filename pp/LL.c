@@ -4,6 +4,7 @@ extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern int tabnum;
 int is_begin_line = 1;//現在のtokenが文の先頭なら1．
+int is_var_tab_check = 0;
 int next_token()
 {//TODO 現在のタブ数を格納する変数
   //タブ数の計算 → タブの挿入 → 文字の表示
@@ -15,16 +16,26 @@ int next_token()
   {
     tabnum = 1;
   }
+  else if(token_num == TVAR)
+  {
+    tabnum = 1;
+    is_var_tab_check = 1;
+  }
   else if(token_num == TEND)
   {
     printf("\n");
     is_begin_line = 1;
     tabnum--;
   }
-  else if(token_num == TBEGIN || token_num == TELSE)
+  else if(token_num == TBEGIN)
   {
     printf("\n");
     is_begin_line = 1;
+    if(is_var_tab_check)
+    {
+      is_var_tab_check = 0;
+      tabnum = 0;
+    }
   }
   else if(token_num == TELSE)
   {
@@ -47,7 +58,7 @@ int next_token()
       printf(" ");
   }
   else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT)
-    if(!(before_token == TLPAREN && token_num == TNAME))
+    if(!(before_token == TLPAREN && token_num != TSTRING))
       printf(" ");
 
 
