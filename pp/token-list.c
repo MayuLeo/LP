@@ -67,6 +67,7 @@ int linenum;
 int main(int nc, char *np[])
 {
   int i;
+  token = 0;
   //char *ptr;
 
   if (nc < 2)
@@ -87,10 +88,10 @@ int main(int nc, char *np[])
   //  parse_program();
   //}
   token = next_token();
-  printf("AAAAA\n");
   parse_program();
   end_scan();
   /* 作成する部分:カウントした結果を出力する */
+  printf("\n--------End PP--------\n");
   printf("LAST-LINENUM : %d\n",get_linenum());
   printf("LAST-STRING: %s\n", string_attr);
   for(i = 1;i < NUMOFTOKEN + 1;i++)

@@ -2,20 +2,56 @@
 extern int token;
 extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
+extern int tabnum;
+int is_begin_line = 1;//現在のtokenが文の先頭なら1．
 int next_token()
-{
+{//TODO 現在のタブ数を格納する変数
+  //タブ数の計算 → タブの挿入 → 文字の表示
+  int before_token = token;
   int token_num = scan();
   if(token_num == -1)
     return token_num;
-  else if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
+  else if(token_num == TPROCEDURE)
+  {
+    tabnum = 1;
+  }
+  else if(token_num == TEND)
+  {
+    printf("\n");
+    is_begin_line = 1;
+    tabnum--;
+  }
+
+  if(is_begin_line)
+  {
+    is_begin_line = 0;
+    for(int i = 0;i < tabnum * 4;i++)
+      printf(" ");
+  }
+
+
+
+//文の頭のタブ問題の解決
+//;無しで改行→1段下がる
+
+  if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
   {
     printf("%s",tokenstr[token_num]);
   }
   else
     printf("%s",string_attr);
 
-  if(token_num == TSEMI)
+  if(token_num == TBEGIN)
+  {
+    tabnum++;
+    is_begin_line = 1;
     printf("\n");
+  }
+  if(token_num == TSEMI)
+  {
+    printf("\n");
+    is_begin_line = 1;
+  }
 
   return token_num;
 }

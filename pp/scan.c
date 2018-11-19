@@ -4,6 +4,7 @@ char cbuf;
 int linenum;
 int num_attr;
 char string_attr[MAXSTRSIZE];
+int tabnum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern key key_keyword[KEYWORDSIZE];
 extern key key_symbol[KEYWORDSIZE];
@@ -19,6 +20,7 @@ int init_scan(char *filename)
   cbuf = fgetc(fp);
   if(cbuf < 0)return -1;
   linenum = 1;
+  tabnum = 0;
   init_idtab();
   return 0;
 }
