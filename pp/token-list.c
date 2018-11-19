@@ -87,6 +87,7 @@ int main(int nc, char *np[])
   //  parse_program();
   //}
   token = next_token();
+  printf("AAAAA\n");
   parse_program();
   end_scan();
   /* 作成する部分:カウントした結果を出力する */

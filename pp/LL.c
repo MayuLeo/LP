@@ -4,8 +4,11 @@ extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 int next_token()
 {
+
   int token_num = scan();
-  if(token_num != TNAME && token_num != TNUMBER && token != TSTRING)
+  if(token_num == -1)
+    return token_num;
+  else if(token_num != TNAME && token_num != TNUMBER && token != TSTRING)
     printf("%s",tokenstr[token_num]);
   else
     printf("%s",string_attr);
@@ -297,7 +300,7 @@ int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手�
       if(compound_statement() == ERROR) return(ERROR);
       break;
     //TODO case empty statement
-    default: return(error("statement error"));
+    default: printf("\nstatement token = %d\n",token);return(error("statement error"));
   }
   return(NORMAL);
 }
