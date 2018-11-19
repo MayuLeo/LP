@@ -4,15 +4,18 @@ extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 int next_token()
 {
-
   int token_num = scan();
   if(token_num == -1)
     return token_num;
-  else if(token_num != TNAME && token_num != TNUMBER && token != TSTRING)
+  else if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
+  {
     printf("%s",tokenstr[token_num]);
+  }
   else
     printf("%s",string_attr);
 
+  if(token_num == TSEMI)
+    printf("\n");
 
   return token_num;
 }
@@ -300,7 +303,8 @@ int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手�
       if(compound_statement() == ERROR) return(ERROR);
       break;
     //TODO case empty statement
-    default: printf("\nstatement token = %d\n",token);return(error("statement error"));
+    default: empty_statement();break;
+    //default: printf("\nstatement token = %d\n",token);return(error("statement error"));
   }
   return(NORMAL);
 }
@@ -658,8 +662,8 @@ int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列
   //printf("end output_formal\n");
   return(NORMAL);
 }
-//int empty_statement()
-//{
-//  token = next_token();
-//  return(NORMAL);
-//}
+int empty_statement()
+{
+  token = next_token();
+  return(NORMAL);
+}

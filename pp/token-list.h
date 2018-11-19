@@ -126,3 +126,4 @@ extern int relational_operator(void);
 extern int input_statement(void);
 extern int output_statement(void);
 extern int output_formal(void);
+extern int empty_statement(void);

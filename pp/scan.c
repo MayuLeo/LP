@@ -183,22 +183,25 @@ int scan(void)
   }
   else if (cbuf == 39) //string
   {
+    snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
     cbuf = fgetc(fp);
     while (1)
     {
 
       if (cbuf < 0)
       {
-        error("文字列内でEOFが発生指定ます．");
+        error("文字列内でEOFが発生指定してます．");
         return -1;
       }
 
       if (cbuf == 39)//文字終了
       {
+        snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
         cbuf = fgetc(fp);
 
         if (cbuf == 39) //連続で文字列があったら，
         {
+          snprintf(token, MAXSTRSIZE, "%s%c", token, cbuf);
           cbuf = fgetc(fp);
           continue;
         }
