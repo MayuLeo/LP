@@ -21,6 +21,24 @@ int next_token()
     is_begin_line = 1;
     tabnum--;
   }
+  else if(token_num == TBEGIN || token_num == TELSE)
+  {
+    printf("\n");
+    is_begin_line = 1;
+  }
+  else if(token_num == TELSE)
+  {
+    printf("\n");
+    is_begin_line = 1;
+  }
+  else if(before_token == TEND && token_num != TSEMI && token_num != TDOT)
+  {
+    //tabnum--;
+    is_begin_line = 1;
+    printf("\n");
+  }
+
+
 
   if(is_begin_line)
   {
@@ -28,7 +46,9 @@ int next_token()
     for(int i = 0;i < tabnum * 4;i++)
       printf(" ");
   }
-
+  else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT)
+    if(!(before_token == TLPAREN && token_num == TNAME))
+      printf(" ");
 
 
 //文の頭のタブ問題の解決
@@ -47,6 +67,12 @@ int next_token()
     is_begin_line = 1;
     printf("\n");
   }
+  //else if(before_token == TEND && token_num != TSEMI)
+  //{
+  //  //tabnum--;
+  //  is_begin_line = 1;
+  //  printf("\n");
+  //}
   if(token_num == TSEMI)
   {
     printf("\n");
