@@ -4,58 +4,68 @@ extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern int tabnum;
 int is_begin_line = 1;//現在のtokenが文の先頭なら1．
-int is_var_tab_check = 0;
+int is_procedure_begintoend = 0;//現在が副プログラム内なら1，外なら0
+int compound_count = 0;//複合文の深さのカウンター
 int next_token()
 {//TODO 現在のタブ数を格納する変数
   //タブ数の計算 → タブの挿入 → 文字の表示
-  int before_token = token;
-  int token_num = scan();
+  //副プログラムのvarは2段tab
+  //varの改行
+  int before_token = token;//一つ前のトークン
+  int token_num = scan();//表示するトークン
   if(token_num == -1)
     return token_num;
   else if(token_num == TPROCEDURE)
   {
-    tabnum = 1;
+    is_procedure_begintoend = 1;//副プログラム内に入るので1
+    tabnum = 1;//副プログラムは必ず1段段付
   }
   else if(token_num == TVAR)
   {
     tabnum = 1;
-    is_var_tab_check = 1;
   }
   else if(token_num == TEND)
   {
-    printf("\n");
-    is_begin_line = 1;
-    tabnum--;
+    if(before_token != TSEMI)//一つ前のトークンが;だと改行が重複してしまうため
+      printf("\n");
+    is_begin_line = 1;//endは改行する
+    tabnum--;//段付が一つ減る
+    compound_count--;//複合文が一つ浅くなる
+    if(compound_count == 0)
+      is_procedure_begintoend = 0;//procedureの複合文が終了している
+    //printf(" compound_count == %d \n",compound_count);
   }
   else if(token_num == TBEGIN)
   {
-    if(before_token != TSEMI)
+    //if(before_token != TSEMI)
       printf("\n");
-    is_begin_line = 1;
-    //if(is_var_tab_check)
-    //{
-    //  is_var_tab_check = 0;
-    //  tabnum = 0;
-    //}
+    //if(is_procedure_begintoend)
+    //  compound_count++;
+    compound_count++;//複合文が一つ深くなる
+    //printf(" compound_count == %d \n",compound_count);
+    is_begin_line = 1;//beginは改行する
+
+    if(compound_count == 1 && is_procedure_begintoend == 0)//一番外側の複合文は段付しない
+      tabnum = 0;
   }
   else if(token_num == TELSE)
   {
-    printf("\n");
-    is_begin_line = 1;
+    printf("\n");//elseは改行する
+    is_begin_line = 1;//
   }
-  else if(before_token == TEND && token_num != TSEMI && token_num != TDOT)
-  {
-    //tabnum--;
-    is_begin_line = 1;
-    printf("\n");
-  }
+  //else if(before_token == TEND && token_num != TSEMI && token_num != TDOT)
+  //{
+  //  //tabnum--;
+  //  is_begin_line = 1;
+  //  printf("\n");
+  //}
 
 
 
-  if(is_begin_line)
+  if(is_begin_line)//文頭ならばタブをつける
   {
     is_begin_line = 0;
-    for(int i = 0;i < tabnum * 4;i++)
+    for(int i = 0;i < tabnum * 4;i++)//1タブ=空白4文字分
       printf(" ");
   }
   else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT )
@@ -67,15 +77,13 @@ int next_token()
 //;無しで改行→1段下がる
 
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
-  {
     printf("%s",tokenstr[token_num]);
-  }
   else
     printf("%s",string_attr);
 
   if(token_num == TBEGIN)
   {
-    tabnum++;
+    tabnum++;//beginのあとはタブを増やす
     is_begin_line = 1;
     printf("\n");
   }
@@ -88,7 +96,7 @@ int next_token()
   if(token_num == TSEMI)
   {
     printf("\n");
-    is_begin_line = 1;
+    is_begin_line = 1;//セミコロンのあとは必ず改行
   }
 
   return token_num;
