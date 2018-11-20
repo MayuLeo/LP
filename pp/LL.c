@@ -29,13 +29,14 @@ int next_token()
   }
   else if(token_num == TBEGIN)
   {
-    printf("\n");
+    if(before_token != TSEMI)
+      printf("\n");
     is_begin_line = 1;
-    if(is_var_tab_check)
-    {
-      is_var_tab_check = 0;
-      tabnum = 0;
-    }
+    //if(is_var_tab_check)
+    //{
+    //  is_var_tab_check = 0;
+    //  tabnum = 0;
+    //}
   }
   else if(token_num == TELSE)
   {
@@ -57,7 +58,7 @@ int next_token()
     for(int i = 0;i < tabnum * 4;i++)
       printf(" ");
   }
-  else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT)
+  else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT )
     if(!(before_token == TLPAREN && token_num != TSTRING))
       printf(" ");
 
@@ -737,6 +738,6 @@ int output_formal()//出力指定: 式 [ ":" "符号なし整数" ] | "文字列
 }
 int empty_statement()
 {
-  token = next_token();
+  //token = next_token();
   return(NORMAL);
 }
