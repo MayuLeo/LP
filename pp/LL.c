@@ -3,14 +3,15 @@ extern int token;
 extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern int tabnum;
-int is_begin_line = 1;//現在のtokenが文の先頭なら1．
+extern int compound_tab[10];
+int is_begin_line = 1; //現在のtokenが文の先頭なら1．
 int is_procedure_begintoend = 0;//現在が副プログラム内なら1，外なら0
 int compound_count = 0;//複合文の深さのカウンター
 int next_token()
+
 {//TODO 現在のタブ数を格納する変数
   //タブ数の計算 → タブの挿入 → 文字の表示
-  //副プログラムのvarは2段tab
-  //varの改行
+  //;のあとのbeginが重複改行
   int before_token = token;//一つ前のトークン
   int token_num = scan();//表示するトークン
   if(token_num == -1)
@@ -22,36 +23,69 @@ int next_token()
   }
   else if(token_num == TVAR)
   {
-    tabnum = 1;
+    
+    if(is_procedure_begintoend)
+      tabnum = 2;
+    else
+      tabnum = 1;
   }
   else if(token_num == TEND)
   {
     if(before_token != TSEMI)//一つ前のトークンが;だと改行が重複してしまうため
       printf("\n");
     is_begin_line = 1;//endは改行する
-    tabnum--;//段付が一つ減る
+    //tabnum--;//段付が一つ減る
+
+    /*
+    if(is_procedure_begintoend)
+      tabnum = compound_count;
+    else
+      tabnum = compound_count-1;
+    */
+    tabnum = compound_tab[compound_count-1];
+    //printf("tabnum = %d\n",tabnum);
     compound_count--;//複合文が一つ浅くなる
     if(compound_count == 0)
       is_procedure_begintoend = 0;//procedureの複合文が終了している
     //printf(" compound_count == %d \n",compound_count);
+    
   }
   else if(token_num == TBEGIN)
   {
-    //if(before_token != TSEMI)
+    if(before_token != TSEMI)
       printf("\n");
     //if(is_procedure_begintoend)
     //  compound_count++;
     compound_count++;//複合文が一つ深くなる
     //printf(" compound_count == %d \n",compound_count);
     is_begin_line = 1;//beginは改行する
-
+    
     if(compound_count == 1 && is_procedure_begintoend == 0)//一番外側の複合文は段付しない
       tabnum = 0;
+    if(compound_count == 1 && is_procedure_begintoend == 1)//副プログラムの複合分は段付1
+      tabnum = 1;
+
+    compound_tab[compound_count - 1] = tabnum;
   }
   else if(token_num == TELSE)
   {
     printf("\n");//elseは改行する
     is_begin_line = 1;//
+    tabnum--;
+  }
+  else if(token_num == TIF)
+  {
+    if(before_token == TELSE)
+    {
+      
+    }
+  }
+
+  if ((before_token == TTHEN || before_token == TELSE || before_token == TDO) && (token_num != TBEGIN))
+  {
+    printf("\n");
+    tabnum++;
+    is_begin_line = 1;
   }
   //else if(before_token == TEND && token_num != TSEMI && token_num != TDOT)
   //{
@@ -73,6 +107,7 @@ int next_token()
       printf(" ");
 
 
+
 //文の頭のタブ問題の解決
 //;無しで改行→1段下がる
 
@@ -80,6 +115,10 @@ int next_token()
     printf("%s",tokenstr[token_num]);
   else
     printf("%s",string_attr);
+
+  //if (token_num == TBEGIN || token_num == TEND)
+  //  printf("  :::compoindC = %d", compound_count);
+
 
   if(token_num == TBEGIN)
   {
@@ -367,7 +406,7 @@ int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手�
       if(call_statement() == ERROR) return(ERROR);
       break;
     case TRETURN://戻り文
-      //printf("文->戻り文\n");
+      printf("文->戻り文\n");
       if(return_statement() == ERROR) return(ERROR);
       break;
     case TREAD:

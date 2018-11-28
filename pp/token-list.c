@@ -64,6 +64,7 @@ char *tokenstr[NUMOFTOKEN + 1] = {
 
 int token;
 int linenum;
+int compound_tab[10];
 int main(int nc, char *np[])
 {
   int i;
