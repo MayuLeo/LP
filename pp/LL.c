@@ -71,7 +71,8 @@ int next_token()
   {
     printf("\n");//elseは改行する
     is_begin_line = 1;//
-    tabnum--;
+    if(before_token != TEND)
+      tabnum--;
   }
   else if(token_num == TIF)
   {
@@ -116,8 +117,8 @@ int next_token()
   else
     printf("%s",string_attr);
 
-  //if (token_num == TBEGIN || token_num == TEND)
-  //  printf("  :::compoindC = %d", compound_count);
+  //if (token_num == TELSE)
+  //  printf("  :::tabnum = %d", tabnum);
 
 
   if(token_num == TBEGIN)
