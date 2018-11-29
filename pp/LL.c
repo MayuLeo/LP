@@ -71,22 +71,17 @@ int next_token()
   {
     printf("\n");//elseは改行する
     is_begin_line = 1;//
-    if(before_token != TEND)
-      tabnum--;
+    //if(before_token != TEND)
+    //  tabnum--;
   }
-  else if(token_num == TIF)
-  {
-    if(before_token == TELSE)
-    {
-      
-    }
-  }
-
   if ((before_token == TTHEN || before_token == TELSE || before_token == TDO) && (token_num != TBEGIN))
   {
-    printf("\n");
-    tabnum++;
-    is_begin_line = 1;
+    if((before_token == TELSE) && (token_num != TIF))
+    {
+      printf("\n");
+      tabnum++;
+      is_begin_line = 1;
+    }
   }
   //else if(before_token == TEND && token_num != TSEMI && token_num != TDOT)
   //{
