@@ -8,10 +8,7 @@ int is_begin_line = 1; //現在のtokenが文の先頭なら1．
 int is_procedure_begintoend = 0;//現在が副プログラム内なら1，外なら0
 int compound_count = 0;//複合文の深さのカウンター
 int next_token()
-
-{//TODO 現在のタブ数を格納する変数
-  //タブ数の計算 → タブの挿入 → 文字の表示
-  //;のあとのbeginが重複改行
+{
   int before_token = token;//一つ前のトークン
   int token_num = scan();//表示するトークン
   if(token_num == -1)
@@ -23,7 +20,6 @@ int next_token()
   }
   else if(token_num == TVAR)
   {
-    
     if(is_procedure_begintoend)
       tabnum = 2;
     else
@@ -34,14 +30,7 @@ int next_token()
     if(before_token != TSEMI)//一つ前のトークンが;だと改行が重複してしまうため
       printf("\n");
     is_begin_line = 1;//endは改行する
-    //tabnum--;//段付が一つ減る
-
-    /*
-    if(is_procedure_begintoend)
-      tabnum = compound_count;
-    else
-      tabnum = compound_count-1;
-    */
+    
     tabnum = compound_tab[compound_count-1];
     //printf("tabnum = %d\n",tabnum);
     compound_count--;//複合文が一つ浅くなる
@@ -143,7 +132,6 @@ int parse_program() {
   token = next_token();
   if(token != TSEMI) return(error("Semicolon is not found"));
   token = next_token();
-  //printf("token = %d\n",token);
   if(block() == ERROR) return(ERROR);
   if(token != TDOT) return(error("Period is not found at the end of program"));
   token = next_token();
@@ -293,22 +281,6 @@ int subprogram_declaration()//副プログラム宣言:"procedure" 手続き名 
 
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
-  /*
-  printf("token : %d\n",token);
-  if(token != TCOLON) return(error("colon is not found"));
-  token = next_token();
-  if(token == TVAR)
-  {
-    if(variable_declaration() == ERROR) return(ERROR);
-    token = next_token();
-  }
-
-  if(compound_statement() == ERROR) return(ERROR);
-  token = next_token();
-  if(token != TSEMI) return(error("semicolon is not found"));
-  token = next_token();
-  */
-  //printf("END subprogram_declaration\n");
   return(NORMAL);
 }
 int procedure_name()//手続き名:"名前"
@@ -348,38 +320,19 @@ int compound_statement()//複合文:"begin" 文 { ";" 文 } "end"
   if(token != TBEGIN) return(error("begin is not found"));
   token = next_token();
   if(statement() == ERROR) return(ERROR);
-  //token = next_token();
-  /*
-  while(token != TEND)
-  {
-    if(token != TSEMI) return(error("semicolon is not found"));
-    token = next_token();
-    if(statement() == ERROR) return(ERROR);
-    //token = next_token();
-  }
-  */
   while (token == TSEMI) {
     token = next_token();
-    //printf("compound_statement -> statement\n");
     if(statement() == ERROR) return(ERROR);
   }
-  //printf("token = %d\n",token);
-  //printf("@@@@@@@@@@@@\n");
+  
   if(token != TEND) return(error("end is not found"));
   token = next_token();
-  //printf("token = %d\n",token);
-  //printf("linenum = %d\n",linenum);
-  //printf("END compound_statement\n");
   return(NORMAL);
 }
 
 
 int statement()//文:代入文 | 分岐文 | 繰り返し文 | 脱出文 | 手続き呼び出し文 | 戻り文 | 入力文 | 出力文 | 複合文 | 空文
 {
-  //代入文 "名前" | 分岐文 "if" | 繰り返し文 "while" | 脱出文 "break" | 手続き呼び出し文 "call" | 戻り文 "return" | 入力文 "read" or "readln" | 出力文 "write" or "writeln" |複合文 "begin" | 空文 ""
-  //printf("statement token = %d\n",token);
-  //printf("statement linenum = %d\n",linenum);
-  //printf("@@@@@@@@@@@@@@@@@@@@@@@\n");
   switch (token) {
     case TNAME://代入文
       //printf("文->代入文\n");

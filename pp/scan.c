@@ -32,6 +32,7 @@ int scan(void)
   memset(token, 0, sizeof(token));
 
   if(cbuf < 0)return -1;
+
   while(cbuf <= 32 || cbuf == 123 || cbuf == 47)
   {
     if ((cbuf == 13) || (cbuf == 10))
@@ -118,7 +119,7 @@ int scan(void)
       snprintf(token,MAXSTRSIZE,"%s%c",token,cbuf);
 
       cbuf = fgetc(fp);
-      if(cbuf < 0)return -1;
+      
 
       if (!((cbuf >= 65 && cbuf <= 90) || (cbuf >= 97 && cbuf <= 122) || (cbuf >= 48 && cbuf <= 57)))
       {//文字でも数字でもなければ
@@ -133,6 +134,9 @@ int scan(void)
         id_countup(string_attr);
         return TNAME;
         break;
+      }else if(cbuf == -1)
+      {
+        return -1;
       }
     }
   }
