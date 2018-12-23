@@ -65,6 +65,15 @@
 #define KEYWORDSIZE 28
 #define SYMBOLSIZE 18
 
+  /* CR type */
+#define TPINT 1
+#define TPCHAR 2
+#define TPBOOL 3
+#define TPARRAY 4
+#define TPARRAYINT 5
+#define TPARRAYCHAR 6
+#define TPARRAYBOOL 7
+#define TPPROC 8
 typedef struct KEY
 {
   char *keyword;
@@ -134,6 +143,7 @@ extern void init_localcr(void);
 extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
+extern void cr_globalsettype(int type);
 extern void cr_globalcountup(char *np);
 extern void cr_localcountup(char *np) ;
 extern void print_globalcr(void);

@@ -79,7 +79,7 @@ int next_token() //最終的に削除される
       printf(" ");
 
   //-----------↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-  if(is_variable_declaration == 1 && token_num == TNAME)
+  if(is_variable_declaration == 1 && token_num == TNAME)//変数宣言時
   {
     if(is_subprogram_declaration == 1)//副プログラムならlocal
     {
@@ -89,6 +89,10 @@ int next_token() //最終的に削除される
     {
       cr_globalDeclaration();
     }
+  }
+  else if(is_variable_declaration == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
+  {//型名セット
+    cr_globalsettype(token_num);
   }
   //-----------↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)

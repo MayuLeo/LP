@@ -76,7 +76,37 @@ void cr_globalDeclaration() //変数宣言時変数だけ
   newid->nextp = globalidroot;
   globalidroot = newid;
 }
+void cr_globalsettype(int type)
+{
+  
+  struct ID *p;
+  for(p = globalidroot;p != NULL;p = p->nextp)
+  {
+    if(p->itp == NULL)
+    {
+      struct TYPE *newtype;
+      if ((newtype = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
+      {
+        printf("can not malloc in cr_globalsettype\n");
+        return;
+      }
+      if (type == TCHAR)
+        newtype->ttype = TPCHAR;
+      else if (type == TINTEGER)
+        newtype->ttype = TPINT;
+      else if (type == TBOOLEAN)
+        newtype->ttype = TPBOOL;
 
+      //配列でないなら
+      newtype->arraysize = -1;
+      newtype->etp = NULL;
+      //procedureでないなら
+      newtype->paratp = NULL;
+
+      p->itp = newtype;
+    }
+  }
+}
 void cr_globalcountup(char *np)
 { /* Register and count up the name pointed by np */
   struct ID *p;
@@ -215,7 +245,20 @@ void print_globalcr()
   {
 //      printf("\t\"Identifier\" \"%s\"\t%d\n", p->name, p->count);
       //printf("%s\t%d\t%d",p->name,p->itp->ttype,p->deflinenum);
-    printf("%s\t%d\n", p->name,p->deflinenum);
+      printf("======%d==========\n",p->itp->ttype);
+    if(p->itp->ttype == TPINT)
+    {
+      printf("%s\tinteger\t\t%d\n", p->name, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPCHAR)
+    {
+      printf("%s\tchar\t\t%d\n", p->name, p->deflinenum);
+    }
+    else if (p->itp->ttype == TBOOLEAN)
+    {
+      printf("%s\tboolean\t\t%d\n", p->name, p->deflinenum);
+    }
+    
   }
 }
 //void print_localcr()
@@ -235,10 +278,15 @@ void release_globalcr()
   for (p = globalidroot; p != NULL; p = q)
   {
     printf("%s\n", p->name);
+    printf("======%d==========\n", p->itp->ttype);
     free(p->name);
     printf("A\n");
     free(p->procname);
-    printf("B\n");
+    printf("B-1\n");
+    free(p->itp->etp);
+    printf("B-2\n");
+    free(p->itp->paratp);
+    printf("B-3\n");
     free(p->itp);
     printf("C\n");
     free(p->irefp);
