@@ -7,7 +7,10 @@ extern int compound_tab[10];
 int is_begin_line = 1; 
 int is_procedure_begintoend = 0;
 int compound_count = 0;
-int next_token()
+int is_variable_declaration = 0;//現在変数宣言部かどうか
+int is_subprogram_declaration = 0;//現在副プログラム部かどうか
+char current_proce_name[MAXSTRSIZE]; //現在の副プログラムの名前
+int next_token() //最終的に削除される
 {
   int before_token = token;
   int token_num = scan();
@@ -75,7 +78,19 @@ int next_token()
     if(!(before_token == TLPAREN && token_num != TSTRING))
       printf(" ");
 
+  //-----------↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+  if(is_variable_declaration == 1 && token_num == TNAME)
+  {
+    if(is_subprogram_declaration == 1)//副プログラムならlocal
+    {
 
+    }
+    else//global
+    {
+      cr_globalDeclaration();
+    }
+  }
+  //-----------↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
     printf("%s",tokenstr[token_num]);
   else
@@ -128,6 +143,7 @@ int block()
 int variable_declaration()
 {
   if(token != TVAR) return(error("var is not found"));
+  is_variable_declaration = 1;
   token = next_token();
   if(variable_names() == ERROR) return(ERROR);
   if(token != TCOLON) return(error(": is not found"));
@@ -147,6 +163,7 @@ int variable_declaration()
     if(token != TSEMI) return(error("; is not found"));
     token = next_token();
   }
+  is_variable_declaration = 0;
   return(NORMAL);
 }
 int variable_names()
@@ -207,6 +224,7 @@ int array_type()
 int subprogram_declaration()
 {
   if (token != TPROCEDURE) return(error("procedure is not found."));
+  is_subprogram_declaration = 1;
   token = next_token();
   if(procedure_name() == ERROR) return(ERROR);
   if(token == TLPAREN)
@@ -225,6 +243,7 @@ int subprogram_declaration()
 
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
+  is_subprogram_declaration = 0;
   return(NORMAL);
 }
 int procedure_name()

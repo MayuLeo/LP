@@ -81,13 +81,8 @@ int main(int nc, char *np[])
     printf("File %s can not open.\n", np[1]);
     return 0;
   }
-
-  /* 作成する部分：トークンカウント用の配列？を初期化する */
-  //while ((token = scan()) >= 0)
-  //{
-  //  numtoken[token]++;
-  //  parse_program();
-  //}
+  init_globalcr();
+  init_localcr();
   token = next_token();
   parse_program();
   end_scan();
@@ -101,7 +96,14 @@ int main(int nc, char *np[])
       printf("%s   ::::  %d\n",tokenstr[i],numtoken[i]);
   }
   print_idtab();
+
+  print_globalcr();
+
+  printf("a\n");
   release_idtab();
+  printf("b\n");
+  release_globalcr();
+  //release_localcr();
   return 0;
 }
 
