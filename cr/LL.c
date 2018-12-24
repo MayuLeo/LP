@@ -94,6 +94,10 @@ int next_token() //最終的に削除される
   {//型名セット
     cr_globalsettype(token_num);
   }
+  else if(is_variable_declaration == 0 && token_num == TNAME)
+  {
+    cr_globalcountup();
+  }
   //-----------↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
     printf("%s",tokenstr[token_num]);

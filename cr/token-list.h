@@ -144,7 +144,7 @@ extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
 extern void cr_globalsettype(int type);
-extern void cr_globalcountup(char *np);
+extern void cr_globalcountup();
 extern void cr_localcountup(char *np) ;
 extern void print_globalcr(void);
 extern void print_localcr(void);
