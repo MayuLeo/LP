@@ -43,7 +43,7 @@ int scan(void)
       {
         cbuf = fgetc(fp);//CRLF
       }
-      linenum++;
+      //linenum++;
     }
     else if(cbuf == 123)//{}コメント文
     {

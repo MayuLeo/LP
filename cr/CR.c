@@ -111,11 +111,8 @@ void cr_globalcountup()
 { /* Register and count up the name pointed by np */
   struct ID *p;
   char *cp;
-  printf("A\n");
   if ((p = search_globalcr(string_attr)) != NULL)
   {
-    printf("B\n");
-
     struct LINE *newl;//末尾につけるLINE
     if((newl = (struct LINE *)malloc(sizeof(struct LINE))) == NULL)//領域確保
     {
@@ -124,7 +121,6 @@ void cr_globalcountup()
     }
     newl->reflinenum = get_linenum();//行数取得
     newl->nextlinep = NULL;//次はまだ未定なのでNULL
-    printf("C\n");
 
     struct LINE *l,*before_l;
     if((l = (struct LINE *)malloc(sizeof(struct LINE))) == NULL)//領域確保
@@ -132,26 +128,21 @@ void cr_globalcountup()
       printf("can not malloc in cr_globalcountup\n");
       return;
     }
-    printf("D\n");
+
     before_l = NULL;
     for (l = p->irefp; l != NULL; l = l->nextlinep)
     {
       before_l = l;
-      printf("c-1\n");
     }
-    printf("E\n");
+
     if(p->irefp == NULL)//初回のみ
     {
       p->irefp = newl;
-      printf("初回\n");
     }
     else
     {
       before_l->nextlinep = newl;
-      printf("2回目以降\n");
     }
-    //p->count++;
-    printf("F\n");
   }
 }
 void cr_localcountup(char *np)

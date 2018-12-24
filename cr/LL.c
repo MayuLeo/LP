@@ -31,7 +31,10 @@ int next_token() //最終的に削除される
   else if(token_num == TEND)
   {
     if(before_token != TSEMI)
+    {
       printf("\n");
+      linenum++;
+    }
     is_begin_line = 1;
     
     tabnum = compound_tab[compound_count-1];
@@ -43,7 +46,10 @@ int next_token() //最終的に削除される
   else if(token_num == TBEGIN)
   {
     if(before_token != TSEMI)
+    {
       printf("\n");
+      linenum++;
+    }
     compound_count++;
     is_begin_line = 1;
     
@@ -57,6 +63,7 @@ int next_token() //最終的に削除される
   else if(token_num == TELSE)
   {
     printf("\n");
+    linenum++;
     is_begin_line = 1;
   }
   if ((before_token == TTHEN || before_token == TELSE || before_token == TDO) && (token_num != TBEGIN))
@@ -64,6 +71,7 @@ int next_token() //最終的に削除される
     if((before_token == TELSE) && (token_num != TIF))
     {
       printf("\n");
+      linenum++;
       tabnum++;
       is_begin_line = 1;
     }
@@ -109,10 +117,12 @@ int next_token() //最終的に削除される
     tabnum++;
     is_begin_line = 1;
     printf("\n");
+    linenum++;
   }
   if(token_num == TSEMI)
   {
     printf("\n");
+    linenum++;
     is_begin_line = 1;
   }
 
