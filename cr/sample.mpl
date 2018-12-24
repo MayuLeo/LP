@@ -1,5 +1,6 @@
 program sample11;
 var n, sum, data : integer;
+var unusedarray : array[100] of char;
 begin
 	writeln('input the number of data');
 	readln(n);

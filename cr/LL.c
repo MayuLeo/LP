@@ -10,6 +10,7 @@ int compound_count = 0;
 int is_variable_declaration = 0;//現在変数宣言部かどうか
 int is_subprogram_declaration = 0;//現在副プログラム部かどうか
 char current_proce_name[MAXSTRSIZE]; //現在の副プログラムの名前
+int is_array = 0;//現在arrayかどうか
 int next_token() //最終的に削除される
 {
   int before_token = token;
@@ -100,7 +101,7 @@ int next_token() //最終的に削除される
   }
   else if(is_variable_declaration == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
   {//型名セット
-    cr_globalsettype(token_num);
+    cr_globalsettype(token_num,is_array);
   }
   else if(is_variable_declaration == 0 && token_num == TNAME)
   {
@@ -226,6 +227,7 @@ int standard_type()
 }
 int array_type()
 {
+  is_array = 1;
   if(token != TARRAY) return(error("array is not found"));
   token = next_token();
   if(token != TLSQPAREN) return(error("[ is not found"));
@@ -237,6 +239,7 @@ int array_type()
   if(token != TOF) return(error("of in not found"));
   token = next_token();
   if(standard_type() == ERROR) return(ERROR);
+  is_array = 0;
   return(NORMAL);
 }
 int subprogram_declaration()

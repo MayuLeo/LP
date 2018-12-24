@@ -60,6 +60,11 @@ void cr_globalDeclaration() //変数宣言時変数だけ
     printf("can not malloc in cr_globalcountup : newid\n");
     return;
   }
+  if(search_globalcr(string_attr) != NULL)
+  {
+    error("Duplicate variable");
+  }
+
   if((newid->name = (char *)malloc(strlen(string_attr) + 1)) == NULL)
     printf("can not malloc globalDeclaration\n");
   else
@@ -76,7 +81,37 @@ void cr_globalDeclaration() //変数宣言時変数だけ
   newid->nextp = globalidroot;
   globalidroot = newid;
 }
-void cr_globalsettype(int type)
+void cr_localDeclaration() //変数宣言時変数だけ
+{
+  struct ID *newid;
+  //struct TYPE *newtype;
+  //struct LINE *newline;
+  if ((newid = (struct ID *)malloc(sizeof(struct ID))) == NULL)
+  {
+    printf("can not malloc in cr_globalcountup : newid\n");
+    return;
+  }
+  if (search_localcr(string_attr) != NULL)
+  {
+    error("Duplicate variable");
+  }
+  if ((newid->name = (char *)malloc(strlen(string_attr) + 1)) == NULL)
+    printf("can not malloc globalDeclaration\n");
+  else
+  {
+    strcpy(newid->name, string_attr);
+  }
+  //newid->name = string_attr;
+  newid->procname = NULL; //副プログラムではないので
+  newid->itp = NULL;      //とりあえずNULLにしておく
+  //ifパラメータが存在したらispraを1，ひとまず0に
+  newid->ispara = 0;
+  newid->deflinenum = get_linenum();
+  newid->irefp = NULL;
+  newid->nextp = localidroot;
+  localidroot = newid;
+}
+void cr_globalsettype(int type,int is_array)
 {
   
   struct ID *p;
@@ -90,16 +125,49 @@ void cr_globalsettype(int type)
         printf("can not malloc in cr_globalsettype\n");
         return;
       }
-      if (type == TCHAR)
-        newtype->ttype = TPCHAR;
-      else if (type == TINTEGER)
-        newtype->ttype = TPINT;
-      else if (type == TBOOLEAN)
-        newtype->ttype = TPBOOL;
+      if(is_array == 0)
+      {
+        if (type == TCHAR)
+          newtype->ttype = TPCHAR;
+        else if (type == TINTEGER)
+          newtype->ttype = TPINT;
+        else if (type == TBOOLEAN)
+          newtype->ttype = TPBOOL;
 
-      //配列でないなら
-      newtype->arraysize = -1;
-      newtype->etp = NULL;
+        //配列でないなら
+        newtype->arraysize = -1;
+        newtype->etp = NULL;
+      }
+      else
+      {
+        struct TYPE *tarray;
+        if ((tarray = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
+        {
+          printf("can not malloc in cr_globalsettype\n");
+          return;
+        }
+
+        if (type == TCHAR)
+        {
+          tarray->ttype = TPCHAR;
+          newtype->ttype = TPARRAYCHAR;
+        }
+        else if (type == TINTEGER)
+        {
+          tarray->ttype = TPINT;
+          newtype->ttype = TPARRAYINT;
+        }
+        else if (type == TBOOLEAN)
+        {
+          tarray->ttype = TPBOOL;
+          newtype->ttype = TPARRAYBOOL;
+        }
+
+        //配列なら
+        newtype->arraysize = num_attr;
+        newtype->etp = tarray;
+      }
+      
       //procedureでないなら
       newtype->paratp = NULL;
 
@@ -107,6 +175,7 @@ void cr_globalsettype(int type)
     }
   }
 }
+
 void cr_globalcountup()
 { /* Register and count up the name pointed by np */
   struct ID *p;
@@ -226,9 +295,21 @@ void print_globalcr()
     {
       printf("%s\tchar\t\t%d |", p->name, p->deflinenum);
     }
-    else if (p->itp->ttype == TBOOLEAN)
+    else if (p->itp->ttype == TPBOOL)
     {
       printf("%s\tboolean\t\t%d |", p->name, p->deflinenum);
+    }
+    else if(p->itp->ttype == TPARRAYINT)
+    {
+      printf("%s\tarray[%d] of integer\t\t%d |", p->name,p->itp->arraysize, p->deflinenum);
+    }
+    else if(p->itp->ttype == TPARRAYCHAR)
+    {
+      printf("%s\tarray[%d] of char\t\t%d |", p->name, p->itp->arraysize, p->deflinenum);
+    }
+    else if(p->itp->ttype == TPARRAYBOOL)
+    {
+      printf("%s\tarray[%d] of boolean\t\t%d |", p->name, p->itp->arraysize, p->deflinenum);
     }
     struct LINE *l;
     for(l = p->irefp;l != NULL;l = l->nextlinep)

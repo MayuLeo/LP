@@ -143,7 +143,7 @@ extern void init_localcr(void);
 extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
-extern void cr_globalsettype(int type);
+extern void cr_globalsettype(int type,int is_array);
 extern void cr_globalcountup();
 extern void cr_localcountup(char *np) ;
 extern void print_globalcr(void);
