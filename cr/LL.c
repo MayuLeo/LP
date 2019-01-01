@@ -11,6 +11,8 @@ int is_variable_declaration = 0;//現在変数宣言部かどうか
 int is_subprogram_declaration = 0;//現在副プログラム部かどうか
 char current_proce_name[MAXSTRSIZE]; //現在の副プログラムの名前
 int is_array = 0;//現在arrayかどうか
+int is_procedure_para = 0;//現在procedureの仮引数部かどうか
+int procedure_para_count = 0;//procedureの仮引数の数
 int next_token() //最終的に削除される
 {
   int before_token = token;
@@ -92,7 +94,7 @@ int next_token() //最終的に削除される
   {
     if(is_subprogram_declaration == 1)//副プログラムならlocal
     {
-
+      cr_localDeclaration();
     }
     else//global
     {
@@ -101,11 +103,44 @@ int next_token() //最終的に削除される
   }
   else if(is_variable_declaration == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
   {//型名セット
-    cr_globalsettype(token_num,is_array);
+    if (is_subprogram_declaration == 1) //副プログラムならlocal
+    {
+      cr_localsettype(token_num,is_array);
+    }
+    else
+    {
+      cr_globalsettype(token_num, is_array);
+    }
   }
-  else if(is_variable_declaration == 0 && token_num == TNAME)
+  else if(before_token == TPROCEDURE && token_num == TNAME)
   {
-    cr_globalcountup();
+    //procedure宣言
+    procedure_para_count = 0;
+    cr_procedureDeclaration();
+  }
+  else if(is_procedure_para == 1 && token_num == TNAME)
+  {
+    //procedure変数セット(パラメータの)
+    procedure_para_count++;
+    cr_localDeclaration();
+  }
+  else if (is_procedure_para == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
+  {
+    //procesdure型セット(パラメータの)
+    cr_localsettype(token_num, is_array);
+    //さっき定義したprocedureのparatpを設定しないといけない
+    cr_procedure_setparatp(token_num,is_array,procedure_para_count);
+  }
+  else if (is_variable_declaration == 0 && token_num == TNAME && before_token != TPROGRAM)
+  {                                     //参照されたらrefに記録する．ここもprocedureが必要
+    if (is_subprogram_declaration == 1) //副プログラムならlocal
+    {
+      cr_localcountup();
+    }
+    else
+    {
+      cr_globalcountup();
+    }
   }
   //-----------↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
@@ -270,12 +305,14 @@ int subprogram_declaration()
 int procedure_name()
 {
   if(token != TNAME) return(error("Don't name"));
+  strcpy(current_proce_name,string_attr);
   token = next_token();
   return(NORMAL);
 }
 int formal_parameters()
 {
   if(token != TLPAREN) return(error("( is not found"));
+  is_procedure_para = 1;
   token = next_token();
   if(variable_names() == ERROR) return(ERROR);
   if(token != TCOLON) return(error(": is not found"));
@@ -290,6 +327,7 @@ int formal_parameters()
     token = next_token();
     if(type() == ERROR) return(ERROR);
   }
+  is_procedure_para = 0;
   return(NORMAL);
 }
 int compound_statement()

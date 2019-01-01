@@ -1,14 +1,18 @@
-program sample11;
-var n, sum, data : integer;
-var unusedarray : array[100] of char;
+program sample11pp;
+var sum : integer;
+var data : integer;
+var n : integer;
+procedure goukei(n, s : integer);
+  var data : integer;
 begin
-	writeln('input the number of data');
-	readln(n);
-	sum := 0;
-	while n > 0 do begin
-		readln(data);
-		sum := sum + data;
-		n := n - 1
-	end;
-	writeln('Sum of data = ', sum)
+  s:=0;
+  while n > 0 do begin
+    readln(data);
+    s := s + data;
+    n := n - 1
+  end
+end;
+
+begin
+  call goukei(n * 2, sum);
 end.
