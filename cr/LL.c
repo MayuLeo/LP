@@ -135,7 +135,10 @@ int next_token() //最終的に削除される
   {                                     //参照されたらrefに記録する．ここもprocedureが必要
     if (is_subprogram_declaration == 1) //副プログラムならlocal
     {
-      cr_localcountup();
+      if(search_localcr(string_attr) != NULL)
+        cr_localcountup();
+      else if(search_globalcr(string_attr) != NULL)
+        cr_globalcountup();
     }
     else
     {
@@ -300,6 +303,13 @@ int subprogram_declaration()
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
   is_subprogram_declaration = 0;
+  copy_local();
+  printf("----------------------\n");
+  print_localcr();
+  printf("----------------------\n");
+  print_allcr();
+  printf("----------------------\n");
+  release_localcr();
   return(NORMAL);
 }
 int procedure_name()

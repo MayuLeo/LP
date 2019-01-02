@@ -419,7 +419,7 @@ void cr_globalcountup()
   else
   {
     printf("\nstring_attr :  %s \n",string_attr);
-    error("There are undefined variables");
+    error("There are undefined variables : global");
   }
 }
 void cr_localcountup()
@@ -464,7 +464,7 @@ void cr_localcountup()
     }
   }
   else
-    error("There are undefined variables");
+    error("There are undefined variables : local");
 }
 void print_globalcr()
 { /* Output the registered data */
@@ -612,6 +612,79 @@ void print_localcr()
     printf("\n");
   }
 }
+void print_allcr()
+{
+  struct ID *p;
+  
+  for (p = alllocalidroot; p != NULL; p = p->nextp)
+  {
+    //printf("======%d==========\n", p->itp->ttype);
+    if (p->itp->ttype == TPINT)
+    {
+      printf("%s:%s \tinteger\t\t%d |", p->name, p->procname, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPCHAR)
+    {
+      printf("%s:%s \tchar\t\t%d |", p->name, p->procname, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPBOOL)
+    {
+      printf("%s:%s \tboolean\t\t%d |", p->name, p->procname, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPARRAYINT)
+    {
+      printf("%s:%s \tarray[%d] of integer\t\t%d |", p->name, p->procname, p->itp->arraysize, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPARRAYCHAR)
+    {
+      printf("%s:%s \tarray[%d] of char\t\t%d |", p->name, p->procname, p->itp->arraysize, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPARRAYBOOL)
+    {
+      printf("%s:%s \tarray[%d] of boolean\t\t%d |", p->name, p->procname, p->itp->arraysize, p->deflinenum);
+    }
+    else if (p->itp->ttype == TPPROC)
+    {
+      printf("%s\tprocedure", p->name);
+      if (p->itp->paratp != NULL)
+      {
+        printf("(");
+        struct TYPE *t;
+        for (t = p->itp->paratp; t != NULL; t = t->paratp)
+        {
+          if (t->ttype == TPINT)
+            printf("integer");
+          else if (t->ttype == TPCHAR)
+            printf("char");
+          else if (t->ttype == TPBOOL)
+            printf("boolean");
+          else if (t->ttype == TPARRAY)
+          {
+            if (t->ttype == TPARRAYINT)
+              printf("array[%d] of integer", t->arraysize);
+            else if (t->ttype == TPARRAYCHAR)
+              printf("array[%d] of char", t->arraysize);
+            else if (t->ttype == TPARRAYBOOL)
+              printf("array[%d] of boolean", t->arraysize);
+          }
+        }
+        printf(")");
+      }
+      printf("\t\t %d | ", p->deflinenum);
+    }
+    struct LINE *l;
+    for (l = p->irefp; l != NULL; l = l->nextlinep)
+    {
+      printf(" %d", l->reflinenum);
+      //l = l->nextlinep;
+      //if(l != NULL)
+      //  printf(", ");
+      //else
+      //  break;
+    }
+    printf("\n");
+  }
+}
 void release_globalcr()
 { /* Release tha data structure */
   struct ID *p, *q;
@@ -651,14 +724,33 @@ void release_globalcr()
 void release_localcr()
 { /* Release tha data structure */
   struct ID *p, *q;
-
+  struct TYPE *t, *u;
   for (p = localidroot; p != NULL; p = q)
   {
+    printf("%s\n", p->name);
+    printf("======%d==========\n", p->itp->ttype);
     free(p->name);
+    printf("A\n");
     free(p->procname);
-    free(p->itp);
+
+    printf("B-1\n");
+    for (t = p->itp; t != NULL; t = u)
+    {
+      if (t->ttype == TPARRAY)
+        free(t->etp);
+      u = t->paratp;
+      free(t);
+    }
+    //free(p->itp->etp);
+    //printf("B-2\n");
+    //free(p->itp->paratp);
+    //printf("B-3\n");
+    //free(p->itp);
+    printf("C\n");
     free(p->irefp);
+    printf("D\n");
     q = p->nextp;
+    printf("E\n");
     free(p);
   }
   init_localcr();
@@ -666,34 +758,53 @@ void release_localcr()
 
 void copy_local()
 {
-  struct ID *l,*all;
+  struct ID *l,*allroot,*before_all;
   if ((l = (struct ID *)malloc(sizeof(struct ID))) == NULL) //領域確保
   {
     printf("can not malloc in cr_localcountup\n");
     return;
   }
-  
+  if ((before_all = (struct ID *)malloc(sizeof(struct ID))) == NULL) //領域確保
+  {
+    printf("can not malloc in cr_localcountup\n");
+    return;
+  }
+  printf("\n");
   //all = alllocalidroot;//TODOケツまで移動しなくちゃ行けない→そこで初めてプログラムが動くかも
   
   for (l = localidroot;l != NULL;l = l->nextp)
   {
-    for (all = alllocalidroot; all != NULL; all = all->nextp)
+    struct ID *all;
+    if ((all = (struct ID *)malloc(sizeof(struct ID))) == NULL) //領域確保
     {
+      printf("can not malloc in cr_localcountup\n");
+      return;
     }
-
+    printf("%s\n",l->name);
+    printf("A\n");
+    //TODO allにidrootを入れた状態でnameの初期化とかやるとやばいかも
+    //all = alllocalidroot;
+    //for (all = alllocalidroot; all != NULL; all = all->nextp)
+    //{
+    //}
+    printf("A-1\n");
     if ((all->name = (char *)malloc(strlen(l->name) + 1)) == NULL)
     {
       printf("can not malloc in copy_local\n");
       return;
     }
+    printf("A-2\n");
+    printf("%s\n",l->name);
     strcpy(all->name,l->name);
+    printf("all : %s\n", all->name);
+    printf("B\n");
     if ((all->procname = (char *)malloc(strlen(l->procname) + 1)) == NULL)
     {
       printf("can not malloc in copy_local\n");
       return;
     }
     strcpy(all->procname, l->procname);
-
+    printf("C\n");
     struct TYPE *t, *alt;
     if ((alt = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
     {
@@ -703,6 +814,7 @@ void copy_local()
     //配列の時はその要素の型まで追う
     if (l->itp->ttype == TPARRAY)
     {
+      printf("D-1\n");
       alt = all->itp;
       alt->ttype = l->itp->ttype;
       alt->arraysize = l->itp->arraysize;
@@ -718,6 +830,7 @@ void copy_local()
     }
     else if (l->ispara == 1) //procedureでパラメータがあるときは全てを追って行かないといけない
     {
+      printf("D-2\n");
       //t = l->itp->paratp;        //パラメータの最初の変数を指す
       alt = all->itp;
       alt->ttype = l->itp->ttype;//TPPROCが入るはず
@@ -743,11 +856,14 @@ void copy_local()
     }
     else
     {
+      printf("D-3\n");
       alt->ttype = l->itp->ttype;
       alt->arraysize = l->itp->arraysize;
       all->itp = alt;
     }
+    printf("E\n");
     all->ispara = l->ispara;
+    printf("F\n");
     all->deflinenum = l->deflinenum;
     struct LINE *line,*newl;
     if ((newl = (struct LINE *)malloc(sizeof(struct LINE))) == NULL)
@@ -756,15 +872,56 @@ void copy_local()
       return;
     }
     all->irefp = newl;
-    for(line = l->irefp;line != NULL;line = line->nextlinep)
+    printf("G\n");
+    if(l->irefp != NULL)
     {
-      struct LINE *tmpl;
-      for(tmpl = newl;tmpl != NULL;tmpl = tmpl->nextlinep)
-      {}
+      for(line = l->irefp;line != NULL;line = line->nextlinep)
+      {
 
-      tmpl->reflinenum = line->reflinenum;
-      tmpl->nextlinep = line->nextlinep;
+        struct LINE *tmpl,*before_tmp,*next;
+        if ((next = (struct LINE *)malloc(sizeof(struct LINE))) == NULL)
+        {
+          printf("can not malloc in copy_local\n");
+          return;
+        }
+        for(tmpl = newl;tmpl != NULL;tmpl = tmpl->nextlinep)
+        {
+          printf("tmpl->ref : %d\n",tmpl->reflinenum);
+          before_tmp = tmpl;
+        }
+        printf("refline : %d\n",line->reflinenum);
+        if (line->reflinenum != 0)
+        {
+          printf("not zero\n");
+          before_tmp->reflinenum = line->reflinenum;
+        }
+        else
+        {
+          printf("zero\n");
+          before_tmp->reflinenum = '\0';
+        }
+        //tmpl->reflinenum = line->reflinenum;
+        printf("G-g\n");
+        //新しくaddsいていかないといけなくない？
+        if(line->nextlinep != NULL)
+          before_tmp->nextlinep = next;
+        
+      }
+      
     }
-    all->nextp = l->nextp;
+    else
+    {
+      all->irefp = NULL;
+    }
+    printf("H\n");
+    all->nextp = alllocalidroot;
+    alllocalidroot = all;
+    //all->nextp = l->nextp;
+
+    //for(allroot = alllocalidroot;allroot != NULL;allroot = allroot->nextp)
+    //{
+    //  before_all = allroot;
+    //}
+    //before_all->nextp = all;
   }
 }

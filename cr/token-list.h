@@ -152,6 +152,8 @@ extern void cr_globalcountup(void);
 extern void cr_localcountup(void);
 extern void print_globalcr(void);
 extern void print_localcr(void);
+extern void print_allcr(void);
 extern void release_globalcr(void);
 extern void release_localcr(void);
+extern void copy_local(void);
 extern char current_proce_name[MAXSTRSIZE];

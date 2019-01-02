@@ -98,7 +98,8 @@ int main(int nc, char *np[])
   print_idtab();
 
   print_globalcr();
-  print_localcr();
+  print_allcr();
+  //print_localcr();
 
   printf("a\n");
   release_idtab();
