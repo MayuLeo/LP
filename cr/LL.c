@@ -130,9 +130,10 @@ int next_token() //最終的に削除される
     cr_localsettype(token_num, is_array);
     //さっき定義したprocedureのparatpを設定しないといけない
     cr_procedure_setparatp(token_num,is_array,procedure_para_count);
+    procedure_para_count = 0;
   }
   else if (is_variable_declaration == 0 && token_num == TNAME && before_token != TPROGRAM)
-  {                                     //参照されたらrefに記録する．ここもprocedureが必要
+  {                 //参照されたらrefに記録する．ここもprocedureが必要
     if (is_subprogram_declaration == 1) //副プログラムならlocal
     {
       if(search_localcr(string_attr) != NULL)
@@ -304,12 +305,13 @@ int subprogram_declaration()
   token = next_token();
   is_subprogram_declaration = 0;
   copy_local();
-  printf("----------------------\n");
+  printf("------------printlocal----------\n");
   print_localcr();
-  printf("----------------------\n");
+  printf("------------printall----------\n");
   print_allcr();
-  printf("----------------------\n");
+  printf("------------releaselocal----------\n");
   release_localcr();
+  printf("success release_local\n");
   return(NORMAL);
 }
 int procedure_name()

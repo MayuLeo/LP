@@ -105,6 +105,8 @@ int main(int nc, char *np[])
   release_idtab();
   printf("b\n");
   release_globalcr();
+  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+  release_allcr();
   //release_localcr();
   return 0;
 }

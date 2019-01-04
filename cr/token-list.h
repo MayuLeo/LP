@@ -140,6 +140,7 @@ extern int empty_statement(void);
 //CR.c
 extern void init_globalcr(void);
 extern void init_localcr(void);
+extern void init_allcr(void);
 extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
@@ -155,5 +156,6 @@ extern void print_localcr(void);
 extern void print_allcr(void);
 extern void release_globalcr(void);
 extern void release_localcr(void);
+extern void release_allcr(void);
 extern void copy_local(void);
 extern char current_proce_name[MAXSTRSIZE];
