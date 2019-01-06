@@ -13,6 +13,26 @@ char current_proce_name[MAXSTRSIZE]; //現在の副プログラムの名前
 int is_array = 0;//現在arrayかどうか
 int is_procedure_para = 0;//現在procedureの仮引数部かどうか
 int procedure_para_count = 0;//procedureの仮引数の数
+struct TYPE
+{
+  int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
+  int arraysize; /* size of array, if TPARRAY */
+  struct TYPE *etp; /* pointer to element type if TPARRAY */
+  struct TYPE *paratp; /* pointer to parameter's type list if ttype is TPPROC */
+};
+struct LINE{
+  int reflinenum;
+  struct LINE *nextlinep;
+};
+struct ID{
+  char *name;
+  char *procname; /* procedure name within which this name is defined */ /* NULL if global name */
+  struct TYPE *itp;
+  int ispara; /* 1:formal parameter, 0:else(variable) */
+  int deflinenum;//宣言された行数
+  struct LINE *irefp;
+  struct ID *nextp;
+};
 int next_token() //最終的に削除される
 {
   int before_token = token;
@@ -90,11 +110,12 @@ int next_token() //最終的に削除される
       printf(" ");
 
   //-----------↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+  //printf("\nstring_attr :%s:%lu:\n",string_attr,strlen(string_attr));
   if(is_variable_declaration == 1 && token_num == TNAME)//変数宣言時
   {
     if(is_subprogram_declaration == 1)//副プログラムならlocal
     {
-      cr_localDeclaration();
+      cr_localDeclaration(0);
     }
     else//global
     {
@@ -122,7 +143,7 @@ int next_token() //最終的に削除される
   {
     //procedure変数セット(パラメータの)
     procedure_para_count++;
-    cr_localDeclaration();
+    cr_localDeclaration(1);
   }
   else if (is_procedure_para == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
   {
@@ -137,9 +158,17 @@ int next_token() //最終的に削除される
     if (is_subprogram_declaration == 1) //副プログラムならlocal
     {
       if(search_localcr(string_attr) != NULL)
+      {
         cr_localcountup();
+      }
       else if(search_globalcr(string_attr) != NULL)
+      {
+        //再帰はできないルールの追加
+        cr_check_Recursive_call();
         cr_globalcountup();
+      }
+      else
+        error("There are undefined variables ");
     }
     else
     {
@@ -161,11 +190,14 @@ int next_token() //最終的に削除される
   }
   if(token_num == TSEMI)
   {
-    printf("\n");
-    linenum++;
-    is_begin_line = 1;
+    if(is_procedure_para == 0)
+    {
+      printf("\n");
+      linenum++;
+      is_begin_line = 1;
+    }
   }
-
+  fflush(stdout);
   return token_num;
 }
 int parse_program() {
@@ -190,6 +222,7 @@ int block()
     }
     if(token == TVAR)
     {
+      
       if(variable_declaration() == ERROR) return(ERROR);
     }
 
@@ -200,9 +233,11 @@ int block()
 }
 int variable_declaration()
 {
+  fflush(stdout);
   if(token != TVAR) return(error("var is not found"));
   is_variable_declaration = 1;
   token = next_token();
+  
   if(variable_names() == ERROR) return(ERROR);
   if(token != TCOLON) return(error(": is not found"));
   token = next_token();
@@ -257,10 +292,17 @@ int type()
 }
 int standard_type()
 {
+  int result;
   if(token == TINTEGER || token == TBOOLEAN || token == TCHAR)
   {
+    if(token == TINTEGER)
+      result = RINT;
+    else if(token == TBOOLEAN)
+      result = RBOOL;
+    else if(token == TCHAR)
+      result = RCHAR;
     token = next_token();
-    return(NORMAL);
+    return(result);
   }
   else return(error("standard_type is not found"));
 }
@@ -272,6 +314,8 @@ int array_type()
   if(token != TLSQPAREN) return(error("[ is not found"));
   token = next_token();
   if(token != TNUMBER) return(error("number is not found"));
+  if(num_attr < 1)
+    return (error("The value of the array must be 1 or more"));
   token = next_token();
   if(token != TRSQPAREN) return(error("] is not found"));
   token = next_token();
@@ -300,18 +344,17 @@ int subprogram_declaration()
     if(variable_declaration() == ERROR) return(ERROR);
   }
   if(compound_statement() == ERROR) return(ERROR);
-
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
   is_subprogram_declaration = 0;
   copy_local();
-  printf("------------printlocal----------\n");
-  print_localcr();
-  printf("------------printall----------\n");
-  print_allcr();
-  printf("------------releaselocal----------\n");
+  
+  //printf("------------printlocal----------\n");
+  //print_localcr();
+  //printf("------------printall----------\n");
+  //print_allcr();
+  //printf("------------releaselocal----------\n");
   release_localcr();
-  printf("success release_local\n");
   return(NORMAL);
 }
 int procedure_name()
@@ -346,12 +389,12 @@ int compound_statement()
 {
   if(token != TBEGIN) return(error("begin is not found"));
   token = next_token();
+  
   if(statement() == ERROR) return(ERROR);
   while (token == TSEMI) {
     token = next_token();
     if(statement() == ERROR) return(ERROR);
   }
-  
   if(token != TEND) return(error("end is not found"));
   token = next_token();
   return(NORMAL);
@@ -398,7 +441,9 @@ int condition_statement()
 {
     if(token != TIF) return(error("if is not found"));
     token = next_token();
-    if(expression() == ERROR) return(ERROR);
+    int result = expression();
+    if(result == ERROR) return(ERROR);
+    if(result != RBOOL) return(error("condition_statement is not boolean"));
     if(token != TTHEN) return(error("then is not fuond"));
     token = next_token();
     if(statement() == ERROR) return(ERROR);
@@ -413,7 +458,11 @@ int iteration_statement()
 {
   if(token != TWHILE) return(error("while is not found"));
   token = next_token();
-  if(expression() == ERROR) return(ERROR);
+
+  int result = expression();
+  if (result == ERROR) return (ERROR);
+  if (result != RBOOL) return (error("condition_statement is not boolean"));
+  //if(expression() == ERROR) return(ERROR);
   if(token != TDO) return(error("do is not found"));
   token = next_token();
   if(statement() == ERROR) return(ERROR);
@@ -430,24 +479,139 @@ int call_statement()
   if(token != TCALL) return(error("call is not found"));
   token = next_token();
   if(procedure_name() == ERROR) return(ERROR);
+  if(check_proc() == ERROR) return(ERROR);
+  struct TYPE *proc_para;
+  if((proc_para = count_formal_parameters()) == NULL) return(error("count_formal_parameters error"));
+  //このprocedureのパラメータの数と型の並びを取得する必要あり
   if(token == TLPAREN)
   {
+    struct TYPE *t,*i,*j;
     token = next_token();
-    if(expressions() == ERROR) return(ERROR);
+    t = expressions();
+    //if(expressions() == ERROR) return(ERROR);
     if(token != TRPAREN) return(error(") is not found"));
     token = next_token();
+    i = proc_para->paratp;
+    j = t;
+    
+    while (1)
+    {
+      if (i->ttype != j->ttype)
+        return (error("call_statement error"));
+      //printf("i->ttype : %d || j->ttype : %d\n",i->ttype,j->ttype);
+      i = i->paratp;
+      j = j->paratp;
+      if (i == NULL)
+      {
+        if (j == NULL)
+        {
+          //printf("A");
+          return(NORMAL);
+        }
+        else
+        {
+          //printf("B");
+          return (error("call_statement error"));
+        }
+      }
+      else if(j == NULL)
+      {
+        //printf("C");
+        return (error("call_statement error"));
+      }
+    }
   }
+  else 
+    return(NORMAL);//引数なし
   return(NORMAL);
 }
-int expressions()
+struct TYPE *expressions()
 {
-  if(expression() == ERROR) return(ERROR);
-  while (token == TCOMMA) {
-    if(token != TCOMMA) return(error("commma is not found"));
-    token = next_token();
-    if(expression() == ERROR) return(ERROR);
+  struct TYPE *t, *tmp, *before_tmp,*nul;
+  if ((t = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
+  {
+    printf("can not malloc in expressions\n");
+    return(NULL);
   }
-  return(NORMAL);
+  switch (expression())
+  {
+    case RINT:
+      t->ttype = TPINT;
+      break;
+    case RCHAR:
+      t->ttype = TPCHAR;
+      break;
+    case RBOOL:
+      t->ttype = TPBOOL;
+      break;
+    default:
+      printf("\nexpressions ERROR\n");
+      return(NULL);
+      break;
+  }
+  t->paratp = NULL;
+  
+  //if(expression() == ERROR) return(ERROR);
+  while (token == TCOMMA) {//式の数をカウント，なければ0→なければそもそも呼ばれない？
+    struct TYPE *newt;
+    if ((newt = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
+    {
+      printf("can not malloc in expressions\n");
+      return(NULL);
+    }
+
+    if(token != TCOMMA)
+    {
+      printf("\nexpressions ERROR\n");
+      return(NULL);
+    }
+    token = next_token();
+    switch (expression())
+    {
+    case RINT:
+    //printf("\nRINT\n");
+      newt->ttype = TPINT;
+      //printf("--");
+      break;
+    case RCHAR:
+      //printf("\nRCHAR\n");
+      newt->ttype = TPCHAR;
+      break;
+    case RBOOL:
+      //printf("\nBOOL\n");
+      newt->ttype = TPBOOL;
+      break;
+    default:
+      printf("\nexpressions ERROR\n");
+      return (NULL);
+      break;
+    }
+    //printf("A-1");
+    newt->paratp = NULL;
+    for(tmp = t;tmp != NULL;tmp = tmp->paratp)
+    {
+      before_tmp = tmp;
+    }
+    //printf("A-2");
+    before_tmp->paratp = newt;
+    //printf("A-3");
+    if(token != TCOMMA)
+    {
+      //printf("GG");
+      before_tmp->paratp->paratp = NULL;
+    }
+    //printf("A-4");
+    //if(expression() == ERROR) return(ERROR);
+  }
+  //printf("-------------------\n");
+  //struct TYPE *aa;
+  //for(aa = t;aa != NULL;aa = aa->paratp)
+  //{
+  //  printf("aa->ttype : %d\n",aa->ttype);
+  //}
+  //printf("-------------------\n");
+  return(t);
+  //return(NORMAL);
 }
 int return_statement()
 {
@@ -457,96 +621,248 @@ int return_statement()
 }
 int assignment_statement()
 {
+  int expre,type;
   if(left_part() == ERROR) return(ERROR);
+  //------------
+  if (is_subprogram_declaration == 1) //副プログラム
+  {
+    if (search_localcr(string_attr) != NULL)
+    {
+      if ((type = check_standard_type_local()) == ERROR)
+        return (ERROR);
+    }
+    else if (search_globalcr(string_attr) != NULL)
+    {
+      if ((type = check_standard_type_global()) == ERROR)
+        return (ERROR);
+    }
+    else
+      error("There are undefined variables aaaaaaa");
+  }
+  else
+  {
+    if ((type = check_standard_type_global()) == ERROR)
+      return (ERROR);
+  }
+
+  //------------
   if(token != TASSIGN) return(error(":= is not found"));
   token = next_token();
-  if(expression() == ERROR) return(ERROR);
-  return(NORMAL);
+  expre = expression();
+  if(expre == ERROR) return(ERROR);
+  if(type != expre)
+    return (error("assignment statement error"));
+  
+  return (NORMAL);
 }
 int left_part()
 {
-  if(variable() == ERROR) return(ERROR);
-  return(NORMAL);
+  int type = variable();
+  if(type == ERROR) return(ERROR);
+  return(type);
 }
 int variable()
 {
+  int type,result;
+  struct ID *p;
+  //変数の型を返す
   if(variable_name() == ERROR) return(ERROR);
+  //------------
+  if (is_subprogram_declaration == 1) //副プログラムならlocal
+  {
+    //printf("\nstring attr %s\n",string_attr);
+    if ((p = search_localcr(string_attr)) != NULL)
+    {
+      //if (check_standard_type_local() == ERROR)return (ERROR);
+      type = check_variable_type_local();
+    }
+    else if ((p = search_globalcr(string_attr)) != NULL)
+    {
+      //if (check_standard_type_global() == ERROR)return (ERROR);
+      type = check_variable_type_global();
+    }
+    else
+      error("There are undefined variables aaaaaaa");
+  }
+  else
+  {
+    p = search_globalcr(string_attr);
+    type = check_variable_type_global();
+  }
+
+  //------------
   if(token == TLSQPAREN)
   {
+    if(type != RARRAY) return(error("variable type error"));
     token = next_token();
-    if(expression() == ERROR) return(ERROR);
+    result = expression();
+    if(result == ERROR) return(ERROR);
+    if(result != RINT) return(error("variable error"));
     if(token != TRSQPAREN) return(error("] is not found"));
     token = next_token();
+    if(p->itp->etp->ttype == TPARRAYINT)
+      return(RINT);
+    else if(p->itp->ttype == TPARRAYCHAR)
+      return(RCHAR);
+    else if(p->itp->ttype == TPARRAYBOOL)
+      return(RBOOL);
+    else  
+      return(error("variable array error"));
   }
+  else
+    return(type);
   return(NORMAL);
 }
 int expression()
-{
-  if(simple_expression() == ERROR) return(ERROR);
+{ 
+  int result1,result2,resultrela;
+  result1 = simple_expression();
+  if (result1 == ERROR) return (ERROR);
+  if(!(token >= TEQUAL && token <= TGREQ))
+  {
+    return(result1);
+  }
   while(token >= TEQUAL && token <= TGREQ)
   {
-    token = next_token();
-    if(simple_expression() == ERROR) return(ERROR);
+    resultrela = relational_operator();
+    if(resultrela == ERROR)return(ERROR);
+    result2 = simple_expression();
+    if(result2 == ERROR) return (ERROR);
+    if(result1 != result2)
+    {
+      return (error("expression error"));
+    }
   }
-  return(NORMAL);
+  return(resultrela);
 }
 int simple_expression()
 {
+  int resulttok1,resulttok2,resultadd,is_pm = 0;
   if(token == TPLUS || token == TMINUS)
   {
+    is_pm = 1;
     token = next_token();
   }
-  if(term() == ERROR) return(ERROR);
+  resulttok1 = term();
+  if(resulttok1 == ERROR) return(ERROR);
+  if(is_pm == 1 && resulttok1 != RINT)
+  {
+    return(error("simple_expression error"));
+  }
+  if(!(token == TPLUS || token == TMINUS || token == TOR))
+  {
+    return(resulttok1);
+  }
+
   while(token == TPLUS || token == TMINUS || token == TOR)
   {
-    token = next_token();
-    if(term() == ERROR) return(ERROR);
+    //token = next_token();
+    resultadd = additive_operator();
+    if(resultadd == ERROR) return(ERROR);
+    resulttok2 = term();
+    if(resulttok2 == ERROR) return(ERROR);
+    if (!((resulttok1 == RINT && resulttok2 == RINT && resultadd == RINT) ||
+          (resulttok1 == RBOOL && resulttok2 == RBOOL && resultadd == RBOOL)))
+    {
+      return (error("simple_expression error"));
+    }
   }
-  return(NORMAL);
+  return(resultadd);
 }
 int term()
 {
-  if(factor() == ERROR) return(ERROR);
+  int resultfac1, resultfac2, resultmulti;
+  resultfac1 = factor();
+  if(resultfac1 == ERROR) return(ERROR);
+  if(!(token == TSTAR || token == TDIV || token == TAND))
+  {
+    return(resultfac1);
+  }
   while (token == TSTAR || token == TDIV || token == TAND)
   {
-    if(multiplicative_operator() == ERROR) return(ERROR);
-    if(factor() == ERROR) return(ERROR);
+    resultmulti = multiplicative_operator();
+    if(resultmulti == ERROR) return(ERROR);
+    resultfac2 = factor();
+    if (resultfac2 == ERROR) return (ERROR);
+
+    if (!((resultfac1 == RINT && resultfac2 == RINT && resultmulti == RINT) || 
+    (resultfac1 == RBOOL && resultfac2 == RBOOL && resultmulti == RBOOL)))
+    {
+      return(error("term error"));
+    }
   }
-  return(NORMAL);
+  return(resultmulti);
+  //return(NORMAL);
 }
+
 int factor()
 {
+  int result;
   switch (token) {
     case TNAME:
-      if(variable() == ERROR) return(ERROR);
+      result = variable();
+      if(result == ERROR) return(ERROR);
+      return(result);
       break;
     case TNUMBER:
     case TFALSE:
     case TTRUE:
     case TSTRING:
-      if(constant() == ERROR) return(ERROR);
+      result = constant();
+      if(result == ERROR) return(ERROR);
+      return(result);
       break;
     case TLPAREN:
       if(token != TLPAREN) return(error("( is not found"));
       token = next_token();
-      if(expression() == ERROR) return(ERROR);
+      result = expression();
+      if(result == ERROR) return(ERROR);
       if(token != TRPAREN) return(error(") is not found"));
       token = next_token();
+      return(result);
       break;
     case TNOT:
       if(token != TNOT) return(error("not is not found"));
       token = next_token();
-      if(factor() == ERROR) return(ERROR);
+      result = factor();
+      if(result == ERROR) return(ERROR);
+      else if(result != RBOOL)return (error("The result of factor must be Bool"));
+      printf("\nD\n");
+      return(result);//bool
       break;
     case TINTEGER:
     case TBOOLEAN:
     case TCHAR:
-      if(standard_type() == ERROR) return(ERROR);
+      result = standard_type();
+      if(result == ERROR) return(ERROR);
       if(token != TLPAREN) return(error("( is not found"));
       token = next_token();
       if(expression() == ERROR) return(ERROR);
+      //------------
+      if (is_subprogram_declaration == 1) //副プログラムならlocal
+      {
+        //printf("\nstring attr %s\n",string_attr);
+        if (search_localcr(string_attr) != NULL)
+        {
+          if(check_standard_type_local() == ERROR) return(ERROR);
+        }
+        else if (search_globalcr(string_attr) != NULL)
+        {
+          if(check_standard_type_global() == ERROR) return(ERROR);
+        }
+        else
+          error("There are undefined variables aaaaaaa");
+      }
+      else
+      {
+        if(check_standard_type_global() == ERROR) return (ERROR);
+      }
+
+      //------------
+      
       if(token != TRPAREN) return(error(") is not found"));
       token = next_token();
+      return(result);
       break;
     default: return(error("factor error"));break;
   }
@@ -558,18 +874,27 @@ int constant()
     case TNUMBER:
       if(token != TNUMBER) return(error("number is not found"));
       token = next_token();
+      return(RINT);
       break;
     case TFALSE:
       if(token != TFALSE) return(error("false is not found"));
       token = next_token();
+      return(RBOOL);
       break;
     case TTRUE:
       if(token != TTRUE) return(error("true is not found"));
       token = next_token();
+      return(RBOOL);
       break;
     case TSTRING:
       if(token != TSTRING) return(error("string is not found"));
       token = next_token();
+      if((strlen(string_attr)-2) != 1)
+      {
+        //printf(":: strlen : %d :%s:\n",strlen(string_attr),string_attr);
+        return(error("Constant character is one character"));
+      }
+      return(RCHAR);
       break;
     default: return(error("constant error"));break;
   }
@@ -579,16 +904,19 @@ int multiplicative_operator()
 {
   switch (token) {
     case TSTAR:
-    if(token != TSTAR) return(error("* is not found"));
-    token = next_token();
+      if(token != TSTAR) return(error("* is not found"));
+      token = next_token();
+      return(RINT);
       break;
     case TDIV:
       if(token != TDIV) return(error("div is not found"));
       token = next_token();
+      return(RINT);
       break;
     case TAND:
       if(token != TAND) return(error("and is not found"));
       token = next_token();
+      return(RBOOL);
       break;
     default: return(error("multiplicative_operator error"));break;
   }
@@ -600,14 +928,17 @@ int additive_operator()
     case TPLUS:
       if(token != TPLUS) return(error("+ is not found"));
       token = next_token();
+      return(RINT);
       break;
     case TMINUS:
       if(token != TMINUS) return(error("- is not found"));
       token = next_token();
+      return(RINT);
       break;
     case TOR:
       if(token != TOR) return(error("or is not found"));
       token = next_token();
+      return(RBOOL);
       break;
     default: return(error("additive_operator error"));break;
   }
@@ -642,7 +973,7 @@ int relational_operator()
       break;
     default: return(error("relational_operator error"));break;
    }
-   return(NORMAL);
+   return(RBOOL);
 }
 int input_statement()
 {
@@ -663,8 +994,9 @@ int input_statement()
   {
 
     token = next_token();
-    if(variable() == ERROR) return(ERROR);
-
+    int result = variable();
+    if(result == ERROR) return(ERROR);
+    if(!(result == RINT || result == RCHAR)) return(error("input statement error"));
     while (token == TCOMMA) {
       token = next_token();
       if(variable() == ERROR) return(ERROR);
@@ -704,12 +1036,18 @@ int output_statement()
 }
 int output_formal()
 {
+  int result = 0;
   if(token == TSTRING)
   {
+    if(strlen(string_attr) == 1)
+      return(error("output_formal strlen error"));
     token = next_token();
   }
-  else if(expression() == NORMAL)
+  else
   {
+    result = expression();
+    if(!(result == RINT || result == RCHAR || result == RBOOL))
+      return(error("output_formal error"));
     if(token == TCOLON)
     {
       token = next_token();
@@ -717,10 +1055,7 @@ int output_formal()
       token = next_token();
     }
   }
-  else
-  {
-    return(error("output_formal error"));
-  }
+  
   return(NORMAL);
 }
 int empty_statement()

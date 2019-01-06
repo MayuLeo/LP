@@ -99,13 +99,8 @@ int main(int nc, char *np[])
 
   print_globalcr();
   print_allcr();
-  //print_localcr();
-
-  printf("a\n");
   release_idtab();
-  printf("b\n");
   release_globalcr();
-  printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
   release_allcr();
   //release_localcr();
   return 0;

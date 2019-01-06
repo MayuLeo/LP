@@ -6,6 +6,10 @@
 #define MAXSTRSIZE 1024
 #define NORMAL 0
 #define ERROR 1
+#define RINT 3
+#define RCHAR 4
+#define RBOOL 5
+#define RARRAY 6
 
 /* Token */
 #define TNAME 1       /* Name : Alphabet { Alphabet | Digit } */
@@ -74,6 +78,8 @@
 #define TPARRAYCHAR 6
 #define TPARRAYBOOL 7
 #define TPPROC 8
+
+
 typedef struct KEY
 {
   char *keyword;
@@ -119,7 +125,7 @@ extern int condition_statement(void);
 extern int iteration_statement(void);
 extern int exit_statement(void);
 extern int call_statement(void);
-extern int expressions(void);
+extern struct TYPE *expressions(void);
 extern int return_statement(void);
 extern int assignment_statement(void);
 extern int left_part(void);
@@ -144,7 +150,7 @@ extern void init_allcr(void);
 extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
-extern void cr_localDeclaration(void);
+extern void cr_localDeclaration(int ispara);
 extern void cr_procedureDeclaration();
 extern void cr_globalsettype(int type, int is_array);
 extern void cr_localsettype(int type, int is_array);
@@ -159,3 +165,11 @@ extern void release_localcr(void);
 extern void release_allcr(void);
 extern void copy_local(void);
 extern char current_proce_name[MAXSTRSIZE];
+extern int is_procedure_para;
+extern void cr_check_Recursive_call(void);
+extern int check_standard_type_local(void);
+extern int check_standard_type_global(void);
+extern int check_variable_type_local(void);
+extern int check_variable_type_global(void);
+extern int check_proc(void);
+extern struct TYPE *count_formal_parameters(void);
