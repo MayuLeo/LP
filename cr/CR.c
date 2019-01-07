@@ -145,6 +145,8 @@ void cr_procedureDeclaration()
   newid->irefp = NULL;
   newid->nextp = globalidroot;
   globalidroot = newid;
+  
+  strcpy(current_proce_name, string_attr);
 }
 
 
@@ -258,6 +260,7 @@ void cr_localsettype(int type, int is_array)
 }
 void cr_procedure_setparatp(int type,int is_array,int paracount)
 {
+  printf("\ncr_procedure_setparatp\n"); 
   struct ID *l;
   for(l = globalidroot;l != NULL;l = l->nextp)
   {
@@ -265,13 +268,14 @@ void cr_procedure_setparatp(int type,int is_array,int paracount)
     {
       for(int i = 0;i < paracount;i++)
       {
+        printf("ss");
         struct TYPE *proctype;
         if ((proctype = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL) //領域確保
         {
           printf("can not malloc in cr_procedure_setparatp\n");
           return;
         }
-
+        
         if (is_array == 0)
         {
           if (type == TCHAR)
@@ -283,6 +287,7 @@ void cr_procedure_setparatp(int type,int is_array,int paracount)
 
           proctype->arraysize = -1;
           proctype->etp = NULL;
+          proctype->paratp = NULL;
         }
         else
         {
@@ -302,8 +307,9 @@ void cr_procedure_setparatp(int type,int is_array,int paracount)
           proctype->ttype = TPARRAY;
           proctype->arraysize = num_attr;
           proctype->etp = tarray;
+          proctype->paratp = NULL;
         }
-
+        //printf("FF");
         struct TYPE *t, *before_t;
         //if ((t = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL) //領域確保
         //{
@@ -312,11 +318,13 @@ void cr_procedure_setparatp(int type,int is_array,int paracount)
         //}
         for (t = l->itp; t != NULL; t = t->paratp)
         {
-          //printf("\nt->ttype : %d\n",t->ttype->paratp->ttype);
           before_t = t;
+          
         }
         before_t->paratp = proctype;
+
       }
+      
       return;
     }
   }
@@ -795,35 +803,6 @@ void copy_local()
       alt->etp = newetp;
       free(newetp);
     }
-    //else if (l->ispara == 1) //procedureでパラメータがあるときは全てを追って行かないといけない
-    //{
-    //  printf("###ispara###");
-    //  fflush(stdout);
-    //  //t = l->itp->paratp;        //パラメータの最初の変数を指す
-    //  alt = all->itp;
-    //  alt->ttype = l->itp->ttype;//TPPROCが入るはず/////////
-    //  alt->arraysize = l->itp->arraysize;
-//
-    //  
-//
-    //  for(t = l->itp->paratp;t != NULL;t = t->paratp)
-    //  {
-    //    struct TYPE *newpara;
-    //    if ((newpara = (struct TYPE *)malloc(sizeof(struct TYPE))) == NULL)
-    //    {
-    //      printf("can not malloc in copy_local\n");
-    //      return;
-    //    }
-    //    
-    //    newpara->ttype = t->ttype;
-    //    newpara->arraysize = t->arraysize;
-    //    alt->paratp = newpara;
-    //    alt = alt->paratp;
-    //    printf("###3###");
-    //    fflush(stdout);
-    //    //altの移動？
-    //  }
-    //}
     else
     {
       alt->ttype = l->itp->ttype;
@@ -887,6 +866,7 @@ void cr_check_Recursive_call()
   {
     if(strcmp(current_proce_name,string_attr) == 0)
     {
+      printf("current_proc_name : %s : string attr : %s\n",current_proce_name,string_attr);
       error("Recursive calls can not be made");
     }
   }

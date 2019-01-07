@@ -110,7 +110,6 @@ int next_token() //最終的に削除される
       printf(" ");
 
   //-----------↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-  //printf("\nstring_attr :%s:%lu:\n",string_attr,strlen(string_attr));
   if(is_variable_declaration == 1 && token_num == TNAME)//変数宣言時
   {
     if(is_subprogram_declaration == 1)//副プログラムならlocal
@@ -152,7 +151,7 @@ int next_token() //最終的に削除される
     //さっき定義したprocedureのparatpを設定しないといけない
     cr_procedure_setparatp(token_num,is_array,procedure_para_count);
     procedure_para_count = 0;
-  }
+    }
   else if (is_variable_declaration == 0 && token_num == TNAME && before_token != TPROGRAM)
   {                 //参照されたらrefに記録する．ここもprocedureが必要
     if (is_subprogram_declaration == 1) //副プログラムならlocal
@@ -360,29 +359,35 @@ int subprogram_declaration()
 int procedure_name()
 {
   if(token != TNAME) return(error("Don't name"));
-  strcpy(current_proce_name,string_attr);
+  //strcpy(current_proce_name,string_attr);
   token = next_token();
   return(NORMAL);
 }
 int formal_parameters()
 {
+  printf("AAAA");
+  fflush(stdout);
   if(token != TLPAREN) return(error("( is not found"));
   is_procedure_para = 1;
   token = next_token();
   if(variable_names() == ERROR) return(ERROR);
+  
   if(token != TCOLON) return(error(": is not found"));
   token = next_token();
   if(type() == ERROR) return(ERROR);
   while (token != TRPAREN)
   {
+    
     if(token != TSEMI) return(error("; is not found"));
     token = next_token();
     if(variable_names() == ERROR) return(ERROR);
+    
     if(token != TCOLON) return(error(": is not found"));
     token = next_token();
     if(type() == ERROR) return(ERROR);
   }
   is_procedure_para = 0;
+  
   return(NORMAL);
 }
 int compound_statement()
@@ -481,6 +486,7 @@ int call_statement()
   if(procedure_name() == ERROR) return(ERROR);
   if(check_proc() == ERROR) return(ERROR);
   struct TYPE *proc_para;
+  
   if((proc_para = count_formal_parameters()) == NULL) return(error("count_formal_parameters error"));
   //このprocedureのパラメータの数と型の並びを取得する必要あり
   if(token == TLPAREN)
@@ -493,12 +499,22 @@ int call_statement()
     token = next_token();
     i = proc_para->paratp;
     j = t;
-    
+    //printf("---------------\n");
+    //struct TYPE *aaa;
+    //for(aaa = i;aaa != NULL;aaa = aaa->paratp)
+    //{
+    //  printf("aaa->ttype : %d\n",aaa->ttype);
+    //}
+    //printf("---------------\n");
     while (1)
     {
+      //printf("i->ttype : %d || j->ttype : %d\n", i->ttype, j->ttype);
+      //fflush(stdout);
       if (i->ttype != j->ttype)
         return (error("call_statement error"));
-      //printf("i->ttype : %d || j->ttype : %d\n",i->ttype,j->ttype);
+      //printf("CCC");
+      //fflush(stdout);
+      
       i = i->paratp;
       j = j->paratp;
       if (i == NULL)
@@ -506,17 +522,20 @@ int call_statement()
         if (j == NULL)
         {
           //printf("A");
+          //fflush(stdout);
           return(NORMAL);
         }
         else
         {
           //printf("B");
+          //fflush(stdout);
           return (error("call_statement error"));
         }
       }
       else if(j == NULL)
       {
         //printf("C");
+        //fflush(stdout);
         return (error("call_statement error"));
       }
     }
@@ -603,13 +622,6 @@ struct TYPE *expressions()
     //printf("A-4");
     //if(expression() == ERROR) return(ERROR);
   }
-  //printf("-------------------\n");
-  //struct TYPE *aa;
-  //for(aa = t;aa != NULL;aa = aa->paratp)
-  //{
-  //  printf("aa->ttype : %d\n",aa->ttype);
-  //}
-  //printf("-------------------\n");
   return(t);
   //return(NORMAL);
 }

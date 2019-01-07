@@ -151,7 +151,7 @@ extern struct ID *search_globalcr(char *np);
 extern struct ID *search_localcr(char *np);
 extern void cr_globalDeclaration(void);
 extern void cr_localDeclaration(int ispara);
-extern void cr_procedureDeclaration();
+extern void cr_procedureDeclaration(void);
 extern void cr_globalsettype(int type, int is_array);
 extern void cr_localsettype(int type, int is_array);
 extern void cr_procedure_setparatp(int type, int is_array,int paracount);
