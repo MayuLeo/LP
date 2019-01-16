@@ -100,8 +100,8 @@ int main(int nc, char *np[])
   //}
   //print_idtab();
 
-  print_globalcr();
-  print_allcr();
+  //print_globalcr();
+  //print_allcr();
   release_idtab();
   release_globalcr();
   release_allcr();

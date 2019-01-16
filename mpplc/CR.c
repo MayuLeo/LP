@@ -978,3 +978,21 @@ void DC_print_local()
     printf("\n$%s%%%s\tDC\t0\n", p->name,current_proce_name);
   }
 }
+void formal_para_ST()
+{
+  struct ID *l;
+  char *tmp;
+  tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+  POP(gr2);
+  for(l = localidroot;l != NULL;l = l->nextp)
+  {
+    if(l->ispara)
+    {
+      snprintf(tmp, MAXSTRSIZE, "$%s%%%s", l->name, l->procname);
+      POP(gr1);
+      ST(gr1,tmp,NULL);
+    }
+  }
+  PUSH("0",gr2);
+  free(tmp);
+}

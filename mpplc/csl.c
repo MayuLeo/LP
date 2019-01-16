@@ -300,23 +300,15 @@ void add_DCList(char *l)
     printf("can not malloc in add_DCnode\n");
     return;
   }
-  printf("1");
-  fflush(stdout);
   if ((node->label = (char *)malloc(MAXSTRSIZE)) == NULL)
     printf("can not malloc add_DCnode\n");
   else
     strcpy(node->label, l);
-  printf("2");
-  fflush(stdout);
   if ((node->value = (char *)malloc(MAXSTRSIZE)) == NULL)
     printf("can not malloc add_DCnode\n");
   else
     strcpy(node->value, string_attr);
-  printf("3");
-  fflush(stdout);
   node->next = NULL;
-  printf("4");
-  fflush(stdout);
   if(DCroot == NULL)
     DCroot = node;
   else
@@ -334,7 +326,6 @@ void output_DCList()
 
   for(node = DCroot;node != NULL;node = node->next)
   {
-    printf("AAAAAAAAAAAAAAAAAAA\n");
     printf("%s\tDC\t%s\n",node->label,node->value);
   }
 }

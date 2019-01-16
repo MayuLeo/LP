@@ -245,3 +245,4 @@ extern char *next_calllabel(void);
 extern void init_DCList(void);
 extern void add_DCList(char *l);
 extern void output_DCList(void);
+extern void formal_para_ST(void);

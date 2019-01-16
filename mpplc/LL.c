@@ -13,7 +13,7 @@ char current_proce_name[MAXSTRSIZE]; //現在の副プログラムの名前
 int is_array = 0;//現在arrayかどうか
 int is_procedure_para = 0;//現在procedureの仮引数部かどうか
 int procedure_para_count = 0;//procedureの仮引数の数
-
+int is_output_format = 0;//現在出力指定かどうか
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -338,24 +338,33 @@ int array_type()
 }
 int subprogram_declaration()
 {
-  
+  int is_formal = 0;
   if (token != TPROCEDURE) return(error("procedure is not found."));
   is_subprogram_declaration = 1;
   token = next_token();
   if(procedure_name() == ERROR) return(ERROR);
-  write_label(current_proce_name);
+  
   if(token == TLPAREN)
   {
     if(formal_parameters() == ERROR) return(ERROR);
+    is_formal = 1;
     token = next_token();
 
   }
+  print_localcr();
+  
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
   if(token == TVAR)
   {
     if(variable_declaration() == ERROR) return(ERROR);
   }
+  write_label(current_proce_name);
+  //------------mpplc---------------
+  //popで退避するのは仮引数がある時だけ？
+  if(is_formal)
+    formal_para_ST();
+  //--------------------------------
   if(compound_statement() == ERROR) return(ERROR);
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
@@ -800,7 +809,7 @@ int term()//caslii
   if(resultfac1 == ERROR) return(ERROR);
   if(!(token == TSTAR || token == TDIV || token == TAND))
   {
-    PUSH("0",gr1);
+    //PUSH("0",gr1);
     return(resultfac1);
   }
   //--------------mpplc-------------
@@ -850,18 +859,32 @@ int factor()
       if(result == ERROR) return(ERROR);
       //------------mpplc--------------
       char *tmp;
+      struct ID *i;
       tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
-      
-      if(is_subprogram_declaration == 1)//副プログラム内なら
+      //ローカルを探して投げればグローバル
+      if((i = search_localcr(string_attr)) != NULL)
       {
-        snprintf(tmp, MAXSTRSIZE, "$%s%%%s", string_attr,current_proce_name);
-        LD_rr(gr1,tmp);
+        snprintf(tmp, MAXSTRSIZE, "$%s%%%s", i->name, i->procname);
+        LD_rr(gr1, tmp);
       }
-      else
+      else if((i = search_globalcr(string_attr)) != NULL)
       {
         snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
-        LAD(gr1, tmp, NULL);
+        if(is_output_format)
+          LD_ra(gr1,tmp,NULL);
+        else
+          LAD(gr1, tmp, NULL);
       }
+      //if(is_subprogram_declaration == 1)//副プログラム内なら
+      //{
+      //  snprintf(tmp, MAXSTRSIZE, "$%s%%%s", string_attr,current_proce_name);
+      //  LD_rr(gr1,tmp);
+      //}
+      //else
+      //{
+      //  snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
+      //  LAD(gr1, tmp, NULL);
+      //}
       free(tmp);
       //-------------------------------
       return(result);
@@ -1124,16 +1147,15 @@ int output_statement()
 int output_formal()
 {
   int result = 0;
+  is_output_format = 1;
   if(token == TSTRING)
   {
     if(strlen(string_attr) == 1)
       return(error("output_formal strlen error"));
-    printf("\n token == TSTRING\n");
+
     char *label = next_calllabel();
     LAD(gr1, label, NULL);
-    printf("A\n");
     add_DCList(label);
-    printf("B\n");
     token = next_token();
   }
   else
@@ -1148,7 +1170,7 @@ int output_formal()
       token = next_token();
     }
   }
-  
+  is_output_format = 0;
   return(NORMAL);
 }
 int empty_statement()
