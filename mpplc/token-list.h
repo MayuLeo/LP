@@ -12,6 +12,17 @@
 #define RBOOL 5
 #define RARRAY 6
 
+#define gr0 "gr0"
+#define gr1 "gr1"
+#define gr2 "gr2"
+#define gr3 "gr3"
+#define gr4 "gr4"
+#define gr5 "gr5"
+#define gr6 "gr6"
+#define gr7 "gr7"
+
+#define LABEL_len 6
+
 /* Token */
 #define TNAME 1       /* Name : Alphabet { Alphabet | Digit } */
 #define TPROGRAM 2    /* program : Keyword */
@@ -179,6 +190,58 @@ extern void DC_print_global(void);
 extern void DC_print_local(void);
 
 //stack.c
-extern void initstack(void);
-extern int push(int input);
-extern int pop(void);
+//extern void initstack(void);
+//extern int push(int input);
+//extern int pop(void);
+
+extern void write_label(char *label);
+extern void LD_rr(char *r1, char *r2);
+extern void LD_ra(char *r,char *adr,char *x);
+extern void ST(char *r, char *adr, char *x);
+extern void LAD(char *r, char *adr, char *x);
+extern void ADDA_rr(char *r1, char *r2);
+extern void ADDA_ra(char *r, char *adr, char *x);
+extern void ADDL_rr(char *r1, char *r2);
+extern void ADDL_ra(char *r, char *adr, char *x);
+extern void SUBA_rr(char *r1, char *r2);
+extern void SUBA_ra(char *r, char *adr, char *x);
+extern void SUBL_rr(char *r1, char *r2);
+extern void SUBL_ra(char *r, char *adr, char *x);
+extern void AND_rr(char *r1, char *r2);
+extern void AND_ra(char *r, char *adr, char *x);
+extern void OR_rr(char *r1, char *r2);
+extern void OR_ra(char *r, char *adr, char *x);
+extern void XOR_rr(char *r1, char *r2);
+extern void XOR_ra(char *r, char *adr, char *x);
+extern void MULA_rr(char *r1, char *r2);
+extern void MULA_ra(char *r, char *adr, char *x);
+extern void MULL_rr(char *r1, char *r2);
+extern void MULL_ra(char *r, char *adr, char *x);
+extern void DIVA_rr(char *r1, char *r2);
+extern void DIVA_ra(char *r, char *adr, char *x);
+extern void DIVL_rr(char *r1, char *r2);
+extern void DIVL_ra(char *r, char *adr, char *x);
+extern void CPA_rr(char *r1, char *r2);
+extern void CPA_ra(char *r, char *adr, char *x);
+extern void CPL_rr(char *r1, char *r2);
+extern void CPL_ra(char *r, char *adr, char *x);
+extern void SLA(char *r, char *adr, char *x);
+extern void SRA(char *r, char *adr, char *x);
+extern void SLL(char *r, char *adr, char *x);
+extern void SRL(char *r, char *adr, char *x);
+extern void JPL(char *adr, char *x);
+extern void JMI(char *adr, char *x);
+extern void JNZ(char *adr, char *x);
+extern void JZE(char *adr, char *x);
+extern void JOV(char *adr, char *x);
+extern void JUMP(char *adr, char *x);
+extern void PUSH(char *adr, char *x);
+extern void POP(char *r);
+extern void CALL(char *adr, char *x);
+extern void RET(void);
+extern void SVC(char *adr, char *x);
+extern void NOP(void);
+extern char *next_calllabel(void);
+extern void init_DCList(void);
+extern void add_DCList(char *l);
+extern void output_DCList(void);

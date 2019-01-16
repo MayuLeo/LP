@@ -1,5 +1,14 @@
 #include "token-list.h"
-
+int label_number = 0;
+struct DCnode{
+  char *label;
+  char *value;
+  struct DCnode *next;
+} *DCroot;
+void write_label(char *label)
+{
+  printf("\n$%s\n",label);
+}
 void LD_rr(char *r1,char *r2)
 {
   printf("\tLD\t%s, %s\n",r1,r2);
@@ -259,4 +268,73 @@ void CALL(char *adr, char *x)
 void RET()
 {
   printf("\tRET\n");
+}
+void SVC(char *adr, char *x)
+{
+  if (x == NULL)
+    printf("\tSVC\t%s\n", adr);
+  else
+    printf("\tSVC\t%s, %s\n", adr, x);
+}
+void NOP()
+{
+  printf("\tNOP\n");
+}
+char *next_calllabel()
+{
+  char *result;
+  result = (char *)malloc(sizeof(char) * 6);
+  label_number++;
+  snprintf(result, 6, "L%04d", label_number);
+  return(result);
+}
+void init_DCList()
+{
+  DCroot = NULL;
+}
+void add_DCList(char *l)
+{
+  struct DCnode *node,*n,*before_n;
+  if ((node = (struct DCnode *)malloc(sizeof(struct DCnode))) == NULL)
+  {
+    printf("can not malloc in add_DCnode\n");
+    return;
+  }
+  printf("1");
+  fflush(stdout);
+  if ((node->label = (char *)malloc(MAXSTRSIZE)) == NULL)
+    printf("can not malloc add_DCnode\n");
+  else
+    strcpy(node->label, l);
+  printf("2");
+  fflush(stdout);
+  if ((node->value = (char *)malloc(MAXSTRSIZE)) == NULL)
+    printf("can not malloc add_DCnode\n");
+  else
+    strcpy(node->value, string_attr);
+  printf("3");
+  fflush(stdout);
+  node->next = NULL;
+  printf("4");
+  fflush(stdout);
+  if(DCroot == NULL)
+    DCroot = node;
+  else
+  {
+    for(n = DCroot;n != NULL;n = n->next)
+    {
+      before_n = n;
+    }
+    before_n->next = node;
+  }
+}
+void output_DCList()
+{
+  struct DCnode *node;
+
+  for(node = DCroot;node != NULL;node = node->next)
+  {
+    printf("AAAAAAAAAAAAAAAAAAA\n");
+    printf("%s\tDC\t%s\n",node->label,node->value);
+  }
 }

@@ -83,20 +83,22 @@ int main(int nc, char *np[])
   }
   init_globalcr();
   init_localcr();
+  init_DCList();
 //  initstack();
   token = next_token();
   parse_program();
   end_scan();
+  output_DCList();
   /* 作成する部分:カウントした結果を出力する */
-  printf("\n--------End PP--------\n");
-  printf("LAST-LINENUM : %d\n",get_linenum());
-  printf("LAST-STRING: %s\n", string_attr);
-  for(i = 1;i < NUMOFTOKEN + 1;i++)
-  {
-    if(numtoken[i] >= 1)
-      printf("%s   ::::  %d\n",tokenstr[i],numtoken[i]);
-  }
-  print_idtab();
+  //printf("\n--------End PP--------\n");
+  //printf("LAST-LINENUM : %d\n",get_linenum());
+  //printf("LAST-STRING: %s\n", string_attr);
+  //for(i = 1;i < NUMOFTOKEN + 1;i++)
+  //{
+  //  if(numtoken[i] >= 1)
+  //    printf("%s   ::::  %d\n",tokenstr[i],numtoken[i]);
+  //}
+  //print_idtab();
 
   print_globalcr();
   print_allcr();

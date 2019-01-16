@@ -14,13 +14,6 @@ int is_array = 0;//現在arrayかどうか
 int is_procedure_para = 0;//現在procedureの仮引数部かどうか
 int procedure_para_count = 0;//procedureの仮引数の数
 
-int gr0 = 0;
-int gr1 = 0;
-int gr2 = 0;
-int gr4 = 0;
-int gr5 = 0;
-int gr6 = 0;
-int gr7 = 0;
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -218,8 +211,12 @@ int parse_program() {
   if(token != TSEMI) return(error("Semicolon is not found"));
   //---------------mplc--------------
   printf("$$%s\tSTART\n",string_attr);
-  gr0 = 0;
-  printf("\tLAD\tgr0, 0\n");
+  LAD(gr0,"0",NULL);
+  CALL(next_calllabel(),NULL);
+  CALL("FLUSH",NULL);
+  SVC("0",NULL);
+  //---------------------------------
+
   token = next_token();
   if(block() == ERROR) return(ERROR);
   if(token != TDOT) return(error("Period is not found at the end of program"));
@@ -341,10 +338,12 @@ int array_type()
 }
 int subprogram_declaration()
 {
+  
   if (token != TPROCEDURE) return(error("procedure is not found."));
   is_subprogram_declaration = 1;
   token = next_token();
   if(procedure_name() == ERROR) return(ERROR);
+  write_label(current_proce_name);
   if(token == TLPAREN)
   {
     if(formal_parameters() == ERROR) return(ERROR);
@@ -794,27 +793,49 @@ int simple_expression()
   }
   return(resultadd);
 }
-int term()
+int term()//caslii
 {
-  int resultfac1, resultfac2, resultmulti;
+  int resultfac1, resultfac2, resultmulti, opr;
   resultfac1 = factor();
   if(resultfac1 == ERROR) return(ERROR);
   if(!(token == TSTAR || token == TDIV || token == TAND))
   {
+    PUSH("0",gr1);
     return(resultfac1);
   }
+  //--------------mpplc-------------
+  LD_ra(gr1,"0",gr1);
+  PUSH("0",gr1);
+  //--------------------------------
   while (token == TSTAR || token == TDIV || token == TAND)
   {
+    opr = token;
     resultmulti = multiplicative_operator();
     if(resultmulti == ERROR) return(ERROR);
     resultfac2 = factor();
     if (resultfac2 == ERROR) return (ERROR);
-
     if (!((resultfac1 == RINT && resultfac2 == RINT && resultmulti == RINT) || 
     (resultfac1 == RBOOL && resultfac2 == RBOOL && resultmulti == RBOOL)))
     {
       return(error("term error"));
     }
+    //--------------mpplc-------------
+    POP(gr2);
+    //POP(gr1);
+    if(opr == TSTAR)
+    {
+      MULA_rr(gr1,gr2);
+      JOV("EOVF",NULL);
+    }
+    else if(opr == TDIV)
+    {
+      DIVA_rr(gr1,gr2);
+      JOV("EOVF", NULL);
+    }
+    else if(opr == TAND)
+      AND_rr(gr1,gr2);
+    PUSH("0",gr1);
+    //--------------------------------
   }
   return(resultmulti);
   //return(NORMAL);
@@ -827,6 +848,22 @@ int factor()
     case TNAME:
       result = variable();
       if(result == ERROR) return(ERROR);
+      //------------mpplc--------------
+      char *tmp;
+      tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+      
+      if(is_subprogram_declaration == 1)//副プログラム内なら
+      {
+        snprintf(tmp, MAXSTRSIZE, "$%s%%%s", string_attr,current_proce_name);
+        LD_rr(gr1,tmp);
+      }
+      else
+      {
+        snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
+        LAD(gr1, tmp, NULL);
+      }
+      free(tmp);
+      //-------------------------------
       return(result);
       break;
     case TNUMBER:
@@ -835,6 +872,31 @@ int factor()
     case TSTRING:
       result = constant();
       if(result == ERROR) return(ERROR);
+      //--------------mpplc-------------
+      if(token == TNUMBER)
+      {
+        char *tmp;
+        tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+        snprintf(tmp, MAXSTRSIZE, "%d", num_attr);
+        LAD(gr1,tmp,NULL);
+        free(tmp);
+      }
+      else if(token == TFALSE)
+      {
+        LAD(gr1, "0", NULL);
+      }
+      else if(token == TTRUE)
+      {
+        LAD(gr1,"1",NULL);
+      }
+      //else if(token == TSTRING)
+      //{
+      //  printf("\n token == TSTRING\n");
+      //  char *label = next_calllabel();
+      //  LAD(gr1,label,NULL);
+      //  add_DCList(label);
+      //}
+      //--------------------------------
       return(result);
       break;
     case TLPAREN:
@@ -1066,6 +1128,12 @@ int output_formal()
   {
     if(strlen(string_attr) == 1)
       return(error("output_formal strlen error"));
+    printf("\n token == TSTRING\n");
+    char *label = next_calllabel();
+    LAD(gr1, label, NULL);
+    printf("A\n");
+    add_DCList(label);
+    printf("B\n");
     token = next_token();
   }
   else
