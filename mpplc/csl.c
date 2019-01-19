@@ -5,9 +5,13 @@ struct DCnode{
   char *value;
   struct DCnode *next;
 } *DCroot;
-void write_label(char *label)
+void write_label_DL(char *label)
 {
   printf("\n$%s\n",label);
+}
+void write_label(char *label)
+{
+  printf("\n%s\n", label);
 }
 void LD_rr(char *r1,char *r2)
 {
@@ -292,8 +296,10 @@ void init_DCList()
 {
   DCroot = NULL;
 }
-void add_DCList(char *l)
+void add_DCList(char *l,int mode)
 {
+  //mode == 0 : DC 'string'
+  //mode == 1 : DC 0
   struct DCnode *node,*n,*before_n;
   if ((node = (struct DCnode *)malloc(sizeof(struct DCnode))) == NULL)
   {
@@ -306,8 +312,11 @@ void add_DCList(char *l)
     strcpy(node->label, l);
   if ((node->value = (char *)malloc(MAXSTRSIZE)) == NULL)
     printf("can not malloc add_DCnode\n");
-  else
+
+  if(mode == 0)
     strcpy(node->value, string_attr);
+  else
+    strcpy(node->value, "0");
   node->next = NULL;
   if(DCroot == NULL)
     DCroot = node;
@@ -328,4 +337,73 @@ void output_DCList()
   {
     printf("%s\tDC\t%s\n",node->label,node->value);
   }
+}
+void relational_casl_code(int rela)
+{
+  printf("\n rela %d\n",rela);
+  POP(gr2);
+  CPA_rr(gr2,gr1);
+  char *next_label1 = next_calllabel();
+  char *next_label2 = next_calllabel();
+  switch (rela)
+  {
+  case TEQUAL:
+    JZE(next_label1, NULL);
+    LD_rr(gr1, gr0);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LAD(gr1, "1", NULL);
+    write_label(next_label2);
+    break;
+  case TNOTEQ:
+    JNZ(next_label1, NULL);
+    LD_rr(gr1, gr0);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LAD(gr1, "1", NULL);
+    write_label(next_label2);
+    break;
+  case TLE:
+    JMI(next_label1, NULL);
+    LD_rr(gr1, gr0);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LAD(gr1, "1", NULL);
+    write_label(next_label2);
+    break;
+  case TLEEQ://要確認
+    JPL(next_label1, NULL);
+    LAD(gr1, "1",NULL);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LD_rr(gr1,gr0);
+    write_label(next_label2);
+    break;
+  case TGR:
+    JPL(next_label1, NULL);
+    LD_rr(gr1, gr0);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LAD(gr1, "1", NULL);
+    write_label(next_label2);
+    break;
+  case TGREQ: //要確認
+    JMI(next_label1, NULL);
+    LAD(gr1, "1", NULL);
+    JUMP(next_label2, NULL);
+    write_label(next_label1);
+    LD_rr(gr1, gr0);
+    write_label(next_label2);
+    break;
+  default:
+    break;
+  }
+  printf("\n aaaaa \n");
+  //char *next_label1 = next_calllabel();
+  //char *next_label2 = next_calllabel();
+  //JZE(next_label1, NULL);
+  //LD_rr(gr1,gr0);
+  //JUMP(next_label2,NULL);
+  //write_label(next_label1);
+  //LAD(gr1,"1",NULL);
 }

@@ -193,7 +193,7 @@ extern void DC_print_local(void);
 //extern void initstack(void);
 //extern int push(int input);
 //extern int pop(void);
-
+extern void write_label_DL(char *label);
 extern void write_label(char *label);
 extern void LD_rr(char *r1, char *r2);
 extern void LD_ra(char *r,char *adr,char *x);
@@ -243,6 +243,7 @@ extern void SVC(char *adr, char *x);
 extern void NOP(void);
 extern char *next_calllabel(void);
 extern void init_DCList(void);
-extern void add_DCList(char *l);
+extern void add_DCList(char *l,int mode);
 extern void output_DCList(void);
 extern void formal_para_ST(void);
+extern void relational_casl_code(int rela);
