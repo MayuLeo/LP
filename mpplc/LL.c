@@ -18,6 +18,8 @@ int is_opr = 0;//現在oprが続いているかどうか
 int is_expre_opr = 0;//最後に読んだ式でoprは1になったかどうか
 int current_relational = 0;//現在の関係演算子
 int is_callsta = 0;//現在callかどうか
+int is_constant_TRUE = 0;//定数のTRUEが出現したかどうか
+int is_constant_FALSE = 0; //定数のFALSEが出現したかどうか
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -845,6 +847,7 @@ int expression()
     is_opr = 1;
     is_expre_opr = 1;
     opr = token;
+    PUSH("0",gr1);
     resultrela = relational_operator();
     if(resultrela == ERROR)return(ERROR);
     result2 = simple_expression();
@@ -882,6 +885,7 @@ int simple_expression()
     is_expre_opr = 1;
     is_opr = 1;
     opr = token;
+    PUSH("0", gr1);
     //token = next_token();
     resultadd = additive_operator();
     if(resultadd == ERROR) return(ERROR);
@@ -944,13 +948,14 @@ int term()//caslii
   //}
   //free(tmp);
   //LD_ra(gr1,"0",gr1);
-  PUSH("0",gr1);
+  
   //--------------------------------
   while (token == TSTAR || token == TDIV || token == TAND)
   {
     is_expre_opr = 1;
     is_opr = 1;
     opr = token;
+    PUSH("0", gr1);
     resultmulti = multiplicative_operator();
     if(resultmulti == ERROR) return(ERROR);
     resultfac2 = factor();
@@ -1003,7 +1008,7 @@ int factor()
         if(is_opr == 0)
         {
           LD_ra(gr1,"0",gr1);
-          PUSH("0",gr1);
+          //PUSH("0",gr1);
         }
       }
       else if((i = search_globalcr(string_attr)) != NULL)
@@ -1057,11 +1062,15 @@ int factor()
       }
       else if(token == TFALSE)
       {
-        LAD(gr1, "0", NULL);
+        //LAD(gr1, "0", NULL);
+        LD_rr(gr1,gr0);
+        is_constant_FALSE = 1;
       }
       else if(token == TTRUE)
       {
+        //LAD(gr1,"1",NULL);
         LAD(gr1,"1",NULL);
+        is_constant_TRUE = 1;
       }
       else if(token == TSTRING)
       {
@@ -1139,23 +1148,50 @@ int factor()
         }
         else if(result == RBOOL)
         {
-
+          CPA_rr(gr1, gr0);
+          char *label = next_calllabel();
+          JZE(label, NULL);
+          LAD(gr1, "1", NULL);
+          write_label(label);
         }
         else if(result == RCHAR)
         {
-
+          LAD(gr2,"127",NULL);
+          AND_rr(gr1,gr2);
         }
       }
       else if(expres_type == RBOOL)
       {
         if (result == RINT)
         {
+          printf("---------");
+          if(is_constant_TRUE == 0 && is_constant_FALSE == 0)
+          {
+            CPA_rr(gr1,gr0);
+            char *label = next_calllabel();
+            JZE(label, NULL);
+            LAD(gr1, "1", NULL);
+            write_label(label);
+          }
+          is_constant_FALSE = 0;
+          is_constant_TRUE = 0;
         }
         else if (result == RBOOL)
         {
+          //何もしない
         }
         else if (result == RCHAR)
         {
+          if (is_constant_TRUE == 0 && is_constant_FALSE == 0)
+          {
+            CPA_rr(gr1, gr0);
+            char *label = next_calllabel();
+            JZE(label, NULL);
+            LAD(gr1, "1", NULL);
+            write_label(label);
+          }
+          is_constant_FALSE = 0;
+          is_constant_TRUE = 0;
         }
       }
       else if(expres_type == RCHAR)
@@ -1165,9 +1201,15 @@ int factor()
         }
         else if (result == RBOOL)
         {
+          CPA_rr(gr1, gr0);
+          char *label = next_calllabel();
+          JZE(label, NULL);
+          LAD(gr1, "1", NULL);
+          write_label(label);
         }
         else if (result == RCHAR)
         {
+
         }
       }
       //-----------------------------
@@ -1388,14 +1430,25 @@ int output_formal()
   is_output_format = 1;
   if(token == TSTRING)
   {
-    if(strlen(string_attr) == 1)
-      return(error("output_formal strlen error"));
-
-    char *label = next_calllabel();
-    LAD(gr1, label, NULL);
-    add_DCList(label,0);
-    LD_rr(gr2,gr0);
-    CALL("WRITESTR",NULL);
+    //if(strlen(string_attr) == 1)
+    //  return(error("output_formal strlen error"));
+    if((strlen(string_attr) - 2)== 1)
+    {
+      char *num;
+      num = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+      snprintf(num, MAXSTRSIZE, "%d", (int)string_attr[1]);
+      LAD(gr1,num,NULL);
+      LD_rr(gr2,gr0);
+      CALL("WRITECHAR",NULL);
+    }
+    else
+    {
+      char *label = next_calllabel();
+      LAD(gr1, label, NULL);
+      add_DCList(label, 0);
+      LD_rr(gr2, gr0);
+      CALL("WRITESTR", NULL);
+    }
     token = next_token();
   }
   else
