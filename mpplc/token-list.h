@@ -101,6 +101,7 @@ extern key key_keyword[KEYWORDSIZE];
 //extern key key_symbol[KEYWORDSIZE];
 
 extern int error(char *mes);
+extern void out_other_csl(void);
 
 /* scan.c */
 extern int init_scan(char *filename);
@@ -186,8 +187,9 @@ extern int check_variable_type_global(void);
 extern int check_proc(void);
 extern struct TYPE *count_formal_parameters(void);
 //--------casl ii----------
-extern void DC_print_global(void);
-extern void DC_print_local(void);
+extern void DC_print_global(char *name, int num);
+extern void DC_print_local(char *name, char *pname, int num);
+//extern void DC_print_num(int isarray);
 
 //stack.c
 //extern void initstack(void);
@@ -195,6 +197,13 @@ extern void DC_print_local(void);
 //extern int pop(void);
 extern void write_label_DL(char *label);
 extern void write_label(char *label);
+extern void write_label_DC(char *label,char *value);
+extern void write_label_DS(char *label, char *value);
+extern void DC(char *label,char *value);
+extern void RPUSH(void);
+extern void RPOP(void);
+extern void OUT(char *val1,char *val2);
+extern void IN(char *val1, char *val2);
 extern void LD_rr(char *r1, char *r2);
 extern void LD_ra(char *r,char *adr,char *x);
 extern void ST(char *r, char *adr, char *x);
@@ -247,3 +256,16 @@ extern void add_DCList(char *l,int mode);
 extern void output_DCList(void);
 extern void formal_para_ST(void);
 extern void relational_casl_code(int rela);
+extern void EOVF(void);
+extern void E0DIV(void);
+extern void EROV(void);
+extern void WRITECHAR(void);
+extern void WRITESTR(void);
+extern void WRITEINT(void);
+extern void WRITEBOOL(void);
+extern void WRITELINE(void);
+extern void FLUSH(void);
+extern void READCHAR(void);
+extern void READINT(void);
+extern void READLINE(void);
+extern void other(void);

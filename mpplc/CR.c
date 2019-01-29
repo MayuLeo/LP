@@ -177,6 +177,7 @@ void cr_globalsettype(int type, int is_array)
 
         newtype->arraysize = -1;
         newtype->etp = NULL;
+        DC_print_global(p->name, 0);
       }
       else
       {
@@ -197,6 +198,7 @@ void cr_globalsettype(int type, int is_array)
         newtype->ttype = TPARRAY;
         newtype->arraysize = num_attr;
         newtype->etp = tarray;
+        DC_print_global(p->name, newtype->arraysize);
       }
       
       newtype->paratp = NULL;
@@ -233,6 +235,7 @@ void cr_localsettype(int type, int is_array)
 
         newtype->arraysize = -1;
         newtype->etp = NULL;
+        DC_print_local(p->name,p->procname,0);
       }
       else
       {
@@ -252,6 +255,7 @@ void cr_localsettype(int type, int is_array)
         newtype->ttype = TPARRAY;
         newtype->arraysize = num_attr;
         newtype->etp = tarray;
+        DC_print_local(p->name, p->procname, newtype->arraysize);
       }
 
       newtype->paratp = NULL;
@@ -962,22 +966,18 @@ struct TYPE *count_formal_parameters()
   return(NULL);
 }
 //---------------casl ii--------------
-void DC_print_global()
-{
-  struct ID *p;
-  if ((p = search_globalcr(string_attr)) != NULL)
-  {
-    printf("\n$%s\tDC\t0\n",p->name);
-  }
-}
-void DC_print_local()
-{
-  struct ID *p;
-  if ((p = search_localcr(string_attr)) != NULL)
-  {
-    printf("\n$%s%%%s\tDC\t0\n", p->name,current_proce_name);
-  }
-}
+
+//void DC_print_num(int isarray)//$aaa DC <num>
+//{
+//  if(isarray)
+//  {
+//    printf("%d\n",num_attr);
+//  }
+//  else
+//  {
+//    printf("0\n");
+//  }
+//}
 void formal_para_ST()
 {
   struct ID *l;

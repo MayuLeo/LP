@@ -65,6 +65,7 @@ char *tokenstr[NUMOFTOKEN + 1] = {
 int token;
 int linenum;
 int compound_tab[10];
+extern FILE *outfp;
 int main(int nc, char *np[])
 {
   int i;
@@ -88,6 +89,7 @@ int main(int nc, char *np[])
   token = next_token();
   parse_program();
   end_scan();
+  printf("\n");
   output_DCList();
   /* 作成する部分:カウントした結果を出力する */
   //printf("\n--------End PP--------\n");
@@ -106,6 +108,9 @@ int main(int nc, char *np[])
   release_globalcr();
   release_allcr();
   //release_localcr();
+  
+  out_other_csl();
+  fclose(outfp);
   return 0;
 }
 
@@ -116,4 +121,20 @@ int error(char *mes)
   //printf("\x1b[32m");
   end_scan();
   return(ERROR);
+}
+void out_other_csl()
+{
+  EOVF();
+  E0DIV();
+  EROV();
+  WRITECHAR();
+  WRITESTR();
+  WRITEINT();
+  WRITEBOOL();
+  WRITELINE();
+  FLUSH();
+  READCHAR();
+  READINT();
+  READLINE();
+  other();
 }

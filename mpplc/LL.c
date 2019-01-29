@@ -4,6 +4,7 @@ extern int linenum;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern int tabnum;
 extern int compound_tab[10];
+extern FILE *outfp;
 int is_begin_line = 1; 
 int is_procedure_begintoend = 0;
 int compound_count = 0;
@@ -20,6 +21,10 @@ int current_relational = 0;//現在の関係演算子
 int is_callsta = 0;//現在callかどうか
 int is_constant_TRUE = 0;//定数のTRUEが出現したかどうか
 int is_constant_FALSE = 0; //定数のFALSEが出現したかどうか
+int is_pp = 1;//プリティプロントするか否か
+char *current_array_name;//現在の配列の名前
+int is_left_array = 0;//現在の代入文の左辺部が配列かどうか
+int is_left_part = 0;//現在左辺部かどうか
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -62,7 +67,8 @@ int next_token() //最終的に削除される
   {
     if(before_token != TSEMI)
     {
-      printf("\n");
+      if(is_pp)
+        printf("\n");
       linenum++;
     }
     is_begin_line = 1;
@@ -77,7 +83,8 @@ int next_token() //最終的に削除される
   {
     if(before_token != TSEMI)
     {
-      printf("\n");
+      if (is_pp)
+        printf("\n");
       linenum++;
     }
     compound_count++;
@@ -92,7 +99,8 @@ int next_token() //最終的に削除される
   }
   else if(token_num == TELSE)
   {
-    printf("\n");
+    if (is_pp)
+      printf("\n");
     linenum++;
     is_begin_line = 1;
   }
@@ -100,7 +108,8 @@ int next_token() //最終的に削除される
   {
     if((before_token == TELSE) && (token_num != TIF))
     {
-      printf("\n");
+      if (is_pp)
+        printf("\n");
       linenum++;
       tabnum++;
       is_begin_line = 1;
@@ -110,11 +119,13 @@ int next_token() //最終的に削除される
   {
     is_begin_line = 0;
     for(int i = 0;i < tabnum * 4;i++)
-      printf(" ");
+      if (is_pp)
+        printf(" ");
   }
   else if(token_num != TSEMI && token_num != TSTRING && token_num != TRPAREN  && token_num != TDOT )
     if(!(before_token == TLPAREN && token_num != TSTRING))
-      printf(" ");
+      if (is_pp)
+        printf(" ");
 
   //-----------↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
   if(is_variable_declaration == 1 && token_num == TNAME)//変数宣言時
@@ -122,16 +133,17 @@ int next_token() //最終的に削除される
     if(is_subprogram_declaration == 1)//副プログラムならlocal
     {
       cr_localDeclaration(0);
-      DC_print_local();
+      //DC_print_local();
     }
     else//global
     {
       cr_globalDeclaration();
-      DC_print_global();
+      //DC_print_global();
     }
   }
   else if(is_variable_declaration == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
   {//型名セット
+    //DC_print_num(is_array);
     if (is_subprogram_declaration == 1) //副プログラムならlocal
     {
       cr_localsettype(token_num,is_array);
@@ -152,7 +164,7 @@ int next_token() //最終的に削除される
     //procedure変数セット(パラメータの)
     procedure_para_count++;
     cr_localDeclaration(1);
-    DC_print_local();
+    //DC_print_local();
   }
   else if (is_procedure_para == 1 && (token_num == TCHAR || token_num == TINTEGER || token_num == TBOOLEAN))
   {
@@ -186,22 +198,30 @@ int next_token() //最終的に削除される
   }
   //-----------↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
   if(token_num != TNAME && token_num != TNUMBER && token_num != TSTRING)
-    printf("%s",tokenstr[token_num]);
+  {
+    if (is_pp)
+      printf("%s", tokenstr[token_num]);
+  }
   else
-    printf("%s",string_attr);
+  {
+    if(is_pp)
+      printf("%s", string_attr);
+  }
 
   if(token_num == TBEGIN)
   {
     tabnum++;
     is_begin_line = 1;
-    printf("\n");
+    if (is_pp)
+      printf("\n");
     linenum++;
   }
   if(token_num == TSEMI)
   {
     if(is_procedure_para == 0)
     {
-      printf("\n");
+      if (is_pp)
+        printf("\n");
       linenum++;
       is_begin_line = 1;
     }
@@ -216,11 +236,13 @@ int parse_program() {
   token = next_token();
   if(token != TSEMI) return(error("Semicolon is not found"));
   //---------------mplc--------------
-  printf("$$%s\tSTART\n",string_attr);
+  fprintf(outfp, "$$%s\tSTART\n", string_attr);
   LAD(gr0,"0",NULL);
   CALL(next_calllabel(),NULL);
   CALL("FLUSH",NULL);
   SVC("0",NULL);
+
+  current_array_name = (char *)malloc(sizeof(char) * MAXSTRSIZE);
   //---------------------------------
 
   token = next_token();
@@ -260,6 +282,7 @@ int variable_declaration()
   if(token != TCOLON) return(error(": is not found"));
   token = next_token();
   if(type() == ERROR) return(ERROR);
+
   //token = next_token();
   if(token != TSEMI) return(error("; is not found"));
   token = next_token();
@@ -358,7 +381,7 @@ int subprogram_declaration()
     token = next_token();
 
   }
-  print_localcr();
+  //print_localcr();
   
   if(token != TSEMI) return(error("semicolon is not found"));
   token = next_token();
@@ -722,6 +745,7 @@ int assignment_statement()
 {
   int expre,type;
   if(left_part() == ERROR) return(ERROR);
+
   //------------
   if (is_subprogram_declaration == 1) //副プログラム
   {
@@ -736,7 +760,7 @@ int assignment_statement()
         return (ERROR);
     }
     else
-      error("There are undefined variables aaaaaaa");
+      error("There are undefined variables");
   }
   else
   {
@@ -753,11 +777,23 @@ int assignment_statement()
     return (error("assignment statement error"));
   //------------------mpplc----------------
   POP(gr2);
-  ST(gr1,"0",gr2);
+  if(is_left_array)
+  {
+    char *tmp;
+    tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+    snprintf(tmp,MAXSTACKSIZE,"$%s",current_array_name);
+    ST(gr1,tmp,gr2);
+    free(tmp);
+  }
+  else
+    ST(gr1,"0",gr2);
+  is_left_array = 0;
+  is_left_part = 0;
   return (NORMAL);
 }
 int left_part()
 {
+  is_left_part = 1;
   int type = variable();
   if(type == ERROR) return(ERROR);
   //------------------------mpplc-------------------
@@ -777,12 +813,16 @@ int left_part()
   }
   PUSH("0",gr1);
   //------------------------------------------------
+  is_left_part = 0;
   return (type);
 }
 int variable()
 {
   int type,result;
   struct ID *p;
+  char *vari_name = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+  snprintf(vari_name,MAXSTRSIZE,"%s",string_attr);
+  //printf("\nAAAAstring attr : %s\n", string_attr);
   //変数の型を返す
   if(variable_name() == ERROR) return(ERROR);
   //------------
@@ -800,7 +840,7 @@ int variable()
       type = check_variable_type_global();
     }
     else
-      error("There are undefined variables aaaaaaa");
+      error("There are undefined variables ");
   }
   else
   {
@@ -809,7 +849,7 @@ int variable()
   }
 
   //------------
-  if(token == TLSQPAREN)
+  if(token == TLSQPAREN)//array
   {
     if(type != RARRAY) return(error("variable type error"));
     token = next_token();
@@ -818,14 +858,45 @@ int variable()
     if(result != RINT) return(error("variable error"));
     if(token != TRSQPAREN) return(error("] is not found"));
     token = next_token();
-    if(p->itp->etp->ttype == TPARRAYINT)
-      return(RINT);
-    else if(p->itp->ttype == TPARRAYCHAR)
-      return(RCHAR);
-    else if(p->itp->ttype == TPARRAYBOOL)
-      return(RBOOL);
-    else  
-      return(error("variable array error"));
+    //---------mpplc--------
+    snprintf(current_array_name, MAXSTRSIZE, "%s", vari_name);
+    if(is_left_part == 1)
+      is_left_array = 1;
+    if(is_variable_declaration == 0)
+    {
+      char *tmp;
+      struct ID *i;
+      tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+      //ローカルを探して無ければグローバル
+      if ((i = search_localcr(vari_name)) != NULL)
+      {
+        //printf("LOCAL");
+        snprintf(tmp,MAXSTRSIZE,"%d",i->itp->arraysize);
+        LAD(gr2,tmp,NULL);
+      }
+      else if ((i = search_globalcr(vari_name)) != NULL)
+      {
+        //printf("GLOBAL %d\n",i->itp->arraysize);
+        //printf("array name %s\n",i->name);
+        snprintf(tmp, MAXSTRSIZE, "%d", i->itp->arraysize);
+        LAD(gr2, tmp, NULL);
+        
+      }
+      CPA_rr(gr2,gr1);
+      JMI("EROV",NULL);
+      JZE("EROV",NULL);
+      CPA_rr(gr1,gr0);
+      JMI("EROV",NULL);
+    }
+    //----------------------
+    if (p->itp->etp->ttype == TPARRAYINT)
+      return (RINT);
+    else if (p->itp->ttype == TPARRAYCHAR)
+      return (RCHAR);
+    else if (p->itp->ttype == TPARRAYBOOL)
+      return (RBOOL);
+    else
+      return (error("variable array error"));
   }
   else
     return(type);
@@ -862,18 +933,24 @@ int expression()
 }
 int simple_expression()
 {
-  int resulttok1,resulttok2,resultadd,is_pm = 0,opr;
+  int resulttok1,resulttok2,resultadd,is_minus = 0,opr;
   if(token == TPLUS || token == TMINUS)
   {
     //is_opr = 1;
-    is_pm = 1;
+    is_minus = 1;
     token = next_token();
   }
   resulttok1 = term();
   if(resulttok1 == ERROR) return(ERROR);
-  if(is_pm == 1 && resulttok1 != RINT)
+  if (is_minus == 1 && resulttok1 != RINT)
   {
     return(error("simple_expression error"));
+  }
+  if(is_minus)
+  {
+    LAD(gr2,"-1",NULL);
+    MULA_rr(gr1,gr2);
+    JOV("EOVF",NULL);
   }
   if(!(token == TPLUS || token == TMINUS || token == TOR))
   {
@@ -1015,7 +1092,9 @@ int factor()
       {
         snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
         if(is_callsta == 0)
+        {
           LD_ra(gr1, tmp, NULL);
+        }
         else if(is_callsta == 1)
         {
           LAD(gr1, tmp, NULL);
@@ -1074,7 +1153,7 @@ int factor()
       }
       else if(token == TSTRING)
       {
-        printf("\n token == TSTRING : %s\n",string_attr);
+        //("\n token == TSTRING : %s\n",string_attr);
         if(strlen(string_attr)-2 != 1)
           return (error("The string must be one character"));
         //char n;
@@ -1164,7 +1243,7 @@ int factor()
       {
         if (result == RINT)
         {
-          printf("---------");
+          //("---------");
           if(is_constant_TRUE == 0 && is_constant_FALSE == 0)
           {
             CPA_rr(gr1,gr0);
@@ -1368,7 +1447,7 @@ int input_statement()
     }
     else
     {
-      snprintf(tmp, MAXSTRSIZE, "$%s", i->name);
+      snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
       LAD(gr1, tmp, NULL);
     }
     free(tmp);

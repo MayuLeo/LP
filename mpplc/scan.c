@@ -5,6 +5,7 @@ int linenum;
 int num_attr;
 char string_attr[MAXSTRSIZE];
 int tabnum;
+FILE *outfp;
 extern char *tokenstr[NUMOFTOKEN + 1];
 extern key key_keyword[KEYWORDSIZE];
 extern key key_symbol[KEYWORDSIZE];
@@ -22,6 +23,23 @@ int init_scan(char *filename)
   linenum = 1;
   tabnum = 0;
   init_idtab();
+  char *outputfilename,*tmp;
+  outputfilename = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+  tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+  //tmp = strtok(filename,".");
+  int filelen = strlen(filename);
+  tmp = filename;
+  tmp[filelen - 4] = '\0';
+  snprintf(outputfilename,MAXSTRSIZE,"%s.csl",tmp);
+  outfp = fopen(outputfilename,"w");
+  if(outfp == NULL)
+  {
+    //失敗と表示し終了
+    printf("ファイルオープン失敗\n");
+    return -1;
+  }
+  //free(outputfilename);
+  //free(tmp);
   return 0;
 }
 int scan(void)
