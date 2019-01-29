@@ -25,6 +25,7 @@ int is_pp = 1;//プリティプロントするか否か
 char *current_array_name;//現在の配列の名前
 int is_left_array = 0;//現在の代入文の左辺部が配列かどうか
 int is_left_part = 0;//現在左辺部かどうか
+char break_label[MAXSTRSIZE];//breakで戻るべきラベル
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -243,6 +244,7 @@ int parse_program() {
   SVC("0",NULL);
 
   current_array_name = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+  // = (char *)malloc(sizeof(char) * MAXSTRSIZE);
   //---------------------------------
 
   token = next_token();
@@ -542,6 +544,7 @@ int iteration_statement()
   if (result != RBOOL) return (error("condition_statement is not boolean"));
   //------------mpplc-----------
   char *next_label = next_calllabel();
+  snprintf(break_label,MAXSTRSIZE,"%s",next_label);
   relational_casl_code(current_relational);
   //POP(gr1);
   CPA_rr(gr1, gr0);
@@ -560,6 +563,7 @@ int iteration_statement()
 int exit_statement()
 {
   if(token != TBREAK) return(error("break is not found"));
+  JUMP(break_label,NULL);
   token = next_token();
   return(NORMAL);
 }
@@ -738,6 +742,7 @@ struct TYPE *expressions()
 int return_statement()
 {
   if(token != TRETURN) return(error("return is not found"));
+  RET();
   token = next_token();
   return(NORMAL);
 }
