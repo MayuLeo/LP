@@ -369,15 +369,26 @@ void output_DCList()
 }
 void DC_print_global(char *name, int num) //<$aaa DC> num
 {
-  fprintf(outfp, "$%s\tDC\t%d\n", name, num);
+  if(num != 0)
+    fprintf(outfp, "$%s\tDS\t%d\n", name, num);
+  else
+    fprintf(outfp, "$%s\tDC\t%d\n", name, num);
 }
 void DC_print_local(char *name, char *pname, int num) //<$aaa DC> num
 {
-  fprintf(outfp, "$%s%%%s\tDC\t%d\n", name, pname, num);
+  if (num != 0)
+    fprintf(outfp, "$%s%%%s\tDS\t%d\n", name, pname, num);
+  else
+    fprintf(outfp, "$%s%%%s\tDC\t%d\n", name, pname, num);
 }
 void relational_casl_code(int rela)
 {
-  //fprintf(outfp,"\n rela %d\n",rela);
+  //printf("\n rela %d\n",rela);
+  //fflush(stdout);
+  if(rela < TEQUAL || rela > TGREQ)
+  {
+    return;
+  }
   POP(gr2);
   CPA_rr(gr2,gr1);
   char *next_label1 = next_calllabel();
@@ -408,7 +419,7 @@ void relational_casl_code(int rela)
     LAD(gr1, "1", NULL);
     write_label(next_label2);
     break;
-  case TLEEQ://要確認
+  case TLEEQ:
     JPL(next_label1, NULL);
     LAD(gr1, "1",NULL);
     JUMP(next_label2, NULL);
@@ -424,7 +435,7 @@ void relational_casl_code(int rela)
     LAD(gr1, "1", NULL);
     write_label(next_label2);
     break;
-  case TGREQ: //要確認
+  case TGREQ:
     JMI(next_label1, NULL);
     LAD(gr1, "1", NULL);
     JUMP(next_label2, NULL);
@@ -433,6 +444,7 @@ void relational_casl_code(int rela)
     write_label(next_label2);
     break;
   default:
+    error("relational_casl_code error");
     break;
   }
   //char *next_label1 = next_calllabel();

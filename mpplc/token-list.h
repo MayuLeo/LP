@@ -142,7 +142,7 @@ extern int call_statement(void);
 extern struct TYPE *expressions(void);
 extern int return_statement(void);
 extern int assignment_statement(void);
-extern int left_part(void);
+extern struct ID *left_part(void);
 extern int variable(void);
 extern int expression(void);
 extern int simple_expression(void);

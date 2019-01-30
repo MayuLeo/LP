@@ -26,6 +26,8 @@ char *current_array_name;//現在の配列の名前
 int is_left_array = 0;//現在の代入文の左辺部が配列かどうか
 int is_left_part = 0;//現在左辺部かどうか
 char break_label[MAXSTRSIZE];//breakで戻るべきラベル
+int is_vari_left_part = 0;//現在の代入文の左辺部がパラメータでない変数であるかどうか
+char left_variable[MAXSTRSIZE];//現在の左辺部の変数名
 struct TYPE
 {
   int ttype; /* TPINT TPCHAR TPBOOL TPARRAY TPARRAYINT TPARRAYCHAR TPARRAYBOOL TPPROC */
@@ -284,13 +286,8 @@ int variable_declaration()
   if(token != TCOLON) return(error(": is not found"));
   token = next_token();
   if(type() == ERROR) return(ERROR);
-
-  //token = next_token();
   if(token != TSEMI) return(error("; is not found"));
   token = next_token();
-
-
-
   while(token == TNAME){
     if(variable_names() == ERROR) break;
     if(token != TCOLON) return(error(": is not found"));
@@ -393,7 +390,6 @@ int subprogram_declaration()
   }
   write_label_DL(current_proce_name);
   //------------mpplc---------------
-  //popで退避するのは仮引数がある時だけ？
   if(is_formal)
     formal_para_ST();
   //--------------------------------
@@ -402,12 +398,6 @@ int subprogram_declaration()
   token = next_token();
   is_subprogram_declaration = 0;
   copy_local();
-  
-  //printf("------------printlocal----------\n");
-  //print_localcr();
-  //printf("------------printall----------\n");
-  //print_allcr();
-  //printf("------------releaselocal----------\n");
   release_localcr();
   RET();
   return(NORMAL);
@@ -415,7 +405,6 @@ int subprogram_declaration()
 int procedure_name()
 {
   if(token != TNAME) return(error("Don't name"));
-  //strcpy(current_proce_name,string_attr);
   token = next_token();
   return(NORMAL);
 }
@@ -431,7 +420,6 @@ int formal_parameters()
   if(type() == ERROR) return(ERROR);
   while (token != TRPAREN)
   {
-    
     if(token != TSEMI) return(error("; is not found"));
     token = next_token();
     if(variable_names() == ERROR) return(ERROR);
@@ -505,12 +493,9 @@ int condition_statement()
     if(result != RBOOL) return(error("condition_statement is not boolean"));
     //------------mpplc-----------
     char *next_label = next_calllabel();
-    relational_casl_code(current_relational);
-    //POP(gr1);
+    //relational_casl_code(current_relational);
     CPA_rr(gr1,gr0);
-    
     JZE(next_label,NULL);
-
     //----------------------------
     if(token != TTHEN) return(error("then is not fuond"));
     token = next_token();
@@ -545,7 +530,7 @@ int iteration_statement()
   //------------mpplc-----------
   char *next_label = next_calllabel();
   snprintf(break_label,MAXSTRSIZE,"%s",next_label);
-  relational_casl_code(current_relational);
+  //relational_casl_code(current_relational);
   //POP(gr1);
   CPA_rr(gr1, gr0);
 
@@ -587,28 +572,16 @@ int call_statement()
     struct TYPE *t,*i,*j;
     token = next_token();
     t = expressions();
-    //if(expressions() == ERROR) return(ERROR);
     if(token != TRPAREN) return(error(") is not found"));
     token = next_token();
     i = proc_para->paratp;
     j = t;
 
     is_callsta = 0;
-    //printf("---------------\n");
-    //struct TYPE *aaa;
-    //for(aaa = i;aaa != NULL;aaa = aaa->paratp)
-    //{
-    //  printf("aaa->ttype : %d\n",aaa->ttype);
-    //}
-    //printf("---------------\n");
     while (1)
     {
-      //printf("i->ttype : %d || j->ttype : %d\n", i->ttype, j->ttype);
-      //fflush(stdout);
       if (i->ttype != j->ttype)
         return (error("call_statement error"));
-      //printf("CCC");
-      //fflush(stdout);
       
       i = i->paratp;
       j = j->paratp;
@@ -616,33 +589,21 @@ int call_statement()
       {
         if (j == NULL)
         {
-          //printf("A");
-          //fflush(stdout);
-          //return(NORMAL);
           break;
         }
         else
         {
-          //printf("B");
-          //fflush(stdout);
           return (error("call_statement error"));
         }
       }
       else if(j == NULL)
       {
-        //printf("C");
-        //fflush(stdout);
         return (error("call_statement error"));
       }
     }
-    PUSH("0",gr1);
+    //if(is_expre_opr == 0)
+    //  PUSH("00",gr1);
   }
-  //else
-  //{
-  //  is_callsta = 0;
-  //  return(NORMAL);//引数なし
-  //}
-  
   CALL(proname,NULL);
   is_callsta = 0;
   return(NORMAL);
@@ -683,7 +644,9 @@ struct TYPE *expressions()
     PUSH("0",gr2);
     add_DCList(tmp,1);
   }
-  
+  else
+    PUSH("0", gr1);
+
   //if(expression() == ERROR) return(ERROR);
   while (token == TCOMMA) {//式の数をカウント，なければ0→なければそもそも呼ばれない？
     struct TYPE *newt;
@@ -735,6 +698,7 @@ struct TYPE *expressions()
     }
     //printf("A-4");
     //if(expression() == ERROR) return(ERROR);
+    PUSH("0", gr1);
   }
   return(t);
   //return(NORMAL);
@@ -749,7 +713,8 @@ int return_statement()
 int assignment_statement()
 {
   int expre,type;
-  if(left_part() == ERROR) return(ERROR);
+  struct ID *i = left_part();
+  if(i == NULL) return(ERROR);
 
   //------------
   if (is_subprogram_declaration == 1) //副プログラム
@@ -781,8 +746,46 @@ int assignment_statement()
   if(type != expre)
     return (error("assignment statement error"));
   //------------------mpplc----------------
-  POP(gr2);
-  if(is_left_array)
+  if (is_vari_left_part == 0)
+    POP(gr2);
+
+  if (is_vari_left_part)
+  {
+    //if(is_left_array == 0)
+    //{//localかglobalで処理変わる
+      struct ID *i;
+      char *tmp;
+      tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+      //ローカルを探して投げればグローバル
+      if ((i = search_localcr(left_variable)) != NULL)
+      {
+        snprintf(tmp, MAXSTACKSIZE, "$%s%%%s", left_variable, i->procname);
+
+        if (is_left_array == 0)
+          ST(gr1, tmp, NULL);
+        else if(is_left_array == 1)
+          ST(gr1, tmp, gr2);
+      }
+      else if ((i = search_globalcr(left_variable)) != NULL)
+      {
+        snprintf(tmp, MAXSTACKSIZE, "$%s", left_variable);
+        
+        if (is_left_array == 0)
+          ST(gr1, tmp, NULL);
+        else if (is_left_array == 1)
+          ST(gr1, tmp, gr2);
+      }
+      free(tmp);
+     //}
+     //else if(is_left_array == 1)
+     //{
+     // tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+     // snprintf(tmp, MAXSTACKSIZE, "$%s", current_array_name);
+     // ST(gr1, tmp, gr2);
+     // free(tmp);
+    //}
+  }
+  else if(is_left_array)
   {
     char *tmp;
     tmp = (char *)malloc(sizeof(char) * MAXSTRSIZE);
@@ -794,13 +797,16 @@ int assignment_statement()
     ST(gr1,"0",gr2);
   is_left_array = 0;
   is_left_part = 0;
+  is_vari_left_part = 0;
   return (NORMAL);
 }
-int left_part()
+struct ID *left_part()
 {
   is_left_part = 1;
+
   int type = variable();
-  if(type == ERROR) return(ERROR);
+  
+  if(type == ERROR) return(NULL);
   //------------------------mpplc-------------------
   char *tmp;
   struct ID *i;
@@ -808,18 +814,28 @@ int left_part()
   //ローカルを探して投げればグローバル
   if ((i = search_localcr(string_attr)) != NULL)
   {
-    snprintf(tmp, MAXSTRSIZE, "$%s%%%s", i->name, i->procname);
-    LD_ra(gr1, tmp,NULL);
-  }
+    //TODO これでいいか不明
+    if(i->ispara)
+    {
+      snprintf(tmp, MAXSTRSIZE, "$%s%%%s", i->name, i->procname);
+      LD_ra(gr1, tmp, NULL);
+      PUSH("0", gr1);
+    }
+    else
+      is_vari_left_part = 1;
+    }
   else if ((i = search_globalcr(string_attr)) != NULL)
   {
-    snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
-    LD_ra(gr1, tmp, NULL);
+    is_vari_left_part = 1;
+    //  snprintf(tmp, MAXSTRSIZE, "$%s", string_attr);
+    //  LD_ra(gr1, tmp, NULL);
   }
-  PUSH("0",gr1);
+  
   //------------------------------------------------
   is_left_part = 0;
-  return (type);
+  //snprintf(left_variable,MAXSTRSIZE,"%s",i->name);
+  return(i);
+  //return (type);
 }
 int variable()
 {
@@ -830,6 +846,8 @@ int variable()
   //printf("\nAAAAstring attr : %s\n", string_attr);
   //変数の型を返す
   if(variable_name() == ERROR) return(ERROR);
+  if(is_left_part)
+    snprintf(left_variable, MAXSTRSIZE, "%s", string_attr);
   //------------
   if (is_subprogram_declaration == 1) //副プログラムならlocal
   {
@@ -933,6 +951,7 @@ int expression()
       return (error("expression error"));
     }
     is_opr = 0;
+    relational_casl_code(current_relational);
   }
   return(resultrela);
 }
@@ -1017,7 +1036,7 @@ int term()//caslii
   if ((i = search_localcr(string_attr)) != NULL)
   {
     //snprintf(tmp, MAXSTRSIZE, "$%s%%%s", i->name, i->procname);
-    if (i->ispara)
+    if (i->ispara && is_callsta == 1)
       LD_ra(gr1, "0", gr1);
   }
   //else if ((i = search_globalcr(string_attr)) != NULL)
@@ -1086,12 +1105,25 @@ int factor()
       if((i = search_localcr(string_attr)) != NULL)
       {
         snprintf(tmp, MAXSTRSIZE, "$%s%%%s", i->name, i->procname);
-        LD_rr(gr1, tmp);
-        if(is_opr == 0)
+        if(i->ispara == 0 && is_callsta == 1)
+          LAD(gr1, tmp, NULL);
+        else
+          LD_rr(gr1, tmp);
+
+        //if(is_opr == 0 && i->ispara == 1 && is_callsta == 0)
+   //NG     //if ((is_opr == 0) && !(token == TCOMMA || token == TRPAREN) && is_procedure_para == 0)
+        //if ((is_opr == 0) || is_procedure_para == 1)
+        //if (i->ispara == 1 && is_procedure_para == 1)
+        if (i->ispara == 1 && is_callsta == 0)
         {
           LD_ra(gr1,"0",gr1);
           //PUSH("0",gr1);
         }
+        //else
+        //{
+        //  
+        //  LD_ra(gr1, "aaaaaaaa", gr1);
+        //}
       }
       else if((i = search_globalcr(string_attr)) != NULL)
       {
@@ -1103,7 +1135,8 @@ int factor()
         else if(is_callsta == 1)
         {
           LAD(gr1, tmp, NULL);
-          if((is_opr == 0) && !(token == TCOMMA || token == TRPAREN))
+          if ((is_opr == 0) && !(token == TCOMMA || token == TRPAREN) && is_procedure_para == 0)
+          //if (!(is_procedure_para && (token == TCOMMA || token == TRPAREN) && !is_opr))
           {
             LD_ra(gr1, "0", gr1);
           }
@@ -1190,6 +1223,13 @@ int factor()
       if(result == ERROR) return(ERROR);
       else if(result != RBOOL)return (error("The result of factor must be Bool"));
       //TODO 論理反転
+      char *next = next_calllabel();
+      LAD(gr2,"1",NULL);
+      CPA_rr(gr0,gr1);
+      JZE(next,NULL);
+      LD_rr(gr1,gr2);
+      write_label(next);
+      XOR_rr(gr1,gr2);
       return(result);//bool
       break;
     case TINTEGER:
@@ -1466,8 +1506,34 @@ int input_statement()
 
     while (token == TCOMMA) {
       token = next_token();
-      if(variable() == ERROR) return(ERROR);
-
+      result = variable();
+      if (result == ERROR) return (ERROR);
+      //---------------mpplc--------------
+      char *tmp2;
+      struct ID *i2;
+      tmp2 = (char *)malloc(sizeof(char) * MAXSTRSIZE);
+      //ローカルを探して投げればグローバル
+      if ((i2 = search_localcr(string_attr)) != NULL)
+      {
+        snprintf(tmp2, MAXSTRSIZE, "$%s%%%s", i2->name, i2->procname);
+        if (i2->ispara)
+          LD_ra(gr1, tmp2, NULL);
+        else
+          LAD(gr1, tmp2, NULL);
+      }
+      else
+      {
+        snprintf(tmp2, MAXSTRSIZE, "$%s", string_attr);
+        LAD(gr1, tmp2, NULL);
+      }
+      free(tmp2);
+      if (!(result == RINT || result == RCHAR))
+        return (error("input statement error"));
+      if (result == RINT)
+        CALL("READINT", NULL);
+      else if (result == RCHAR)
+        CALL("READCHAR", NULL);
+      //----------------------------------
     }
     if(token != TRPAREN) return(error(") is not found"));
     token = next_token();
